@@ -6,7 +6,7 @@
 
     'author': '',
     'website': '',
-    'source': {'git': '', 'branch': '', 'folder': ''},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master', 'path': 'jarvis_man_client'},
 
     'category': 'tools-jarvis',
     'version': '0.1',
