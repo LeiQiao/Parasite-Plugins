@@ -84,7 +84,7 @@ class BasePlugin(Plugin):
         pa.database.app = pa.web_app
         pa.database.init_app(pa.web_app)
 
-    @Plugin.before_install
+    #@Plugin.before_install
     def install_tables(self):
         # 获取模块的数据库表
         plugin = importlib.import_module('plugins.{0}'.format(self.plugin_name))
