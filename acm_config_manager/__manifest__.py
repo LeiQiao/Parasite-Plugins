@@ -6,7 +6,7 @@
 
     'author': '',
     'website': '',
-    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master', 'path': 'acm_config_manager'},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'tools',
     'version': '0.1',

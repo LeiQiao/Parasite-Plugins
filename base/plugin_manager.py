@@ -14,6 +14,10 @@ class PluginManager:
         self.all_installed_plugins.append(base_plugin)
         self.load_plugins()
 
+    def load_extra_plugin(self, extra_plugin_path):
+
+
+
     def load_plugins(self):
         base_plugin = self.get_plugin('base')
 
@@ -86,34 +90,65 @@ class PluginManager:
                            .format(os.path.basename(plugin_path)))
             return None
 
-    def _load_plugin(self, plugin_name, depend_by=None):
+    def _load_plugin(self, plugin_name, plugin_version=None, plugin_path=None, depend_by=None):
         if len(plugin_name) == 0:
             return
 
         if self.get_plugin(plugin_name) is not None:
-            return
+            raise ModuleNotFoundError('plugin \'{0}\'({1}) has not found'
+                                      .format(plugin_name,
+                                              'any' if plugin_version is None else plugin_version))
 
         installed_plugin = Plugins.query.filter_by(name=plugin_name).first()
         # 插件已卸载
         if installed_plugin is not None and installed_plugin.installed == 0:
+            if depend_by is not None:
+                raise ModuleNotFoundError('plugin \'{0}\'({1}) is uninstalled'
+                                          .format(plugin_name,
+                                                  'any' if plugin_version is None else plugin_version))
             return
 
-        plugin = importlib.import_module('plugins.{0}'.format(plugin_name))
+        if plugin_path is None:
+            plugin_path = 'plugins'
+        else:
+            plugin_path = os.path.realpath(plugin_path)
+            rel_path = os.path.relpath(plugin_path, os.getcwd())
+            plugin_path = rel_path.replace('/', '.')
+        plugin = importlib.import_module('{0}.{1}'.format(plugin_path, plugin_name))
         manifest = self._load_plugin_manifest(os.path.dirname(plugin.__file__))
         if manifest is None:
-            return
+            raise ModuleNotFoundError('plugin \'{0}\'({1}) was not found \'__manifest__.py\' file'
+                                      .format(plugin_name,
+                                              'any' if plugin_version is None else plugin_version))
+
+        if plugin_version is not None and plugin_version.lower() != manifest['version'].lower():
+            raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
+                                      .format(plugin_name,
+                                              plugin_version,
+                                              manifest['version']))
 
         # 加载模块的依赖模块
         for depend_name in manifest['depends']:
+            sep_pos = depend_name.find(':')
+            if sep_pos >= 0:
+                depend_version = depend_name[sep_pos+1:].strip()
+                depend_name = depend_name[:sep_pos].strip()
+            else:
+                depend_version = None
+                depend_name = depend_name.strip()
+
             if depend_by is None:
                 depend_by = []
             else:
                 # 循环依赖
                 if plugin_name in depend_by:
-                    raise RecursionError('recursive dependency: {0} -> {1}'.format(' -> '.join(depend_by), plugin_name))
+                    raise RecursionError('recursive dependency: {0} -> {1}({2})'
+                                         .format(' -> '.join(depend_by),
+                                                 plugin_name,
+                                                 'any' if plugin_version is None else plugin_version))
             new_depend_by = depend_by[:]
             new_depend_by.append(plugin_name)
-            self._load_plugin(depend_name, new_depend_by)
+            self._load_plugin(depend_name, depend_version, new_depend_by)
 
         # 获取模块的入口对象
         plugin_class = None
@@ -124,7 +159,9 @@ class PluginManager:
             if isinstance(attribute_value, type) and issubclass(attribute_value, Plugin):
                 plugin_class = attribute_value
         if plugin_class is None:
-            raise ModuleNotFoundError('plugin \'{0}\' has not found enterance'.format(manifest['name']))
+            raise ModuleNotFoundError('plugin \'{0}\'{1} has not found enterance'
+                                      .format(manifest['name'],
+                                              'any' if plugin_version is None else plugin_version))
 
         plugin = plugin_class(plugin_name=plugin_name, manifest=manifest)
 

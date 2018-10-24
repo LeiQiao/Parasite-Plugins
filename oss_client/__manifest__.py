@@ -6,7 +6,7 @@
 
     'author': '',
     'website': '',
-    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master', 'path': 'oss_client'},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'tools',
     'version': '0.1',

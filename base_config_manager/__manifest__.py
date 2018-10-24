@@ -6,7 +6,7 @@
 
     'author': '',
     'website': '',
-    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master', 'path': 'base_config_manager'},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'base',
     'version': '0.1',

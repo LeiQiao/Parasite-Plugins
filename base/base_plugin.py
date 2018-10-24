@@ -34,7 +34,7 @@ class BasePlugin(Plugin):
         logger.addHandler(logging.StreamHandler())
 
     def load_config(self):
-        opts, args = getopt.getopt(sys.argv[1:], 'c:', ['debug'])
+        opts, args = getopt.getopt(sys.argv[1:], 'c:', ['debug', 'extra_plugin='])
 
         # 调试状态
         if 'debug' in args:
@@ -75,6 +75,12 @@ class BasePlugin(Plugin):
 
         # 将 base 加入到插件列表中
         pa.plugin_manager.start(self, os.path.dirname(__file__))
+
+        # 调试插件
+        for opt in opts:
+            if opt[0] == '--extra_plugin':
+                extra_plugin_path = opt[1]
+                pa.plugin_manager.load_extra_plugin(extra_plugin_path)
 
     @staticmethod
     def load_database(db_uri):
