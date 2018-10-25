@@ -15,8 +15,7 @@ class PluginManager:
         self.load_plugins()
 
     def load_extra_plugin(self, extra_plugin_path):
-
-
+        pass
 
     def load_plugins(self):
         base_plugin = self.get_plugin('base')
@@ -94,10 +93,14 @@ class PluginManager:
         if len(plugin_name) == 0:
             return
 
-        if self.get_plugin(plugin_name) is not None:
-            raise ModuleNotFoundError('plugin \'{0}\'({1}) has not found'
-                                      .format(plugin_name,
-                                              'any' if plugin_version is None else plugin_version))
+        installed_plugin = self.get_plugin(plugin_name)
+        if installed_plugin is not None:
+            if plugin_version is not None and installed_plugin.manifest['version'] != plugin_version:
+                raise ModuleNotFoundError('plugin \'{0}\'installed version is not equal to required version'
+                                          ' {1} != {2}'
+                                          .format(plugin_name,
+                                                  installed_plugin.manifest['version'],
+                                                  plugin_version))
 
         installed_plugin = Plugins.query.filter_by(name=plugin_name).first()
         # 插件已卸载
