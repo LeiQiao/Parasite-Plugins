@@ -151,7 +151,7 @@ class PluginManager:
                                                  'any' if plugin_version is None else plugin_version))
             new_depend_by = depend_by[:]
             new_depend_by.append(plugin_name)
-            self._load_plugin(depend_name, depend_version, new_depend_by)
+            self._load_plugin(depend_name, depend_version, None, new_depend_by)
 
         # 获取模块的入口对象
         plugin_class = None
