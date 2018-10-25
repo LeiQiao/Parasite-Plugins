@@ -101,6 +101,7 @@ class PluginManager:
                                           .format(plugin_name,
                                                   installed_plugin.manifest['version'],
                                                   plugin_version))
+            return
 
         installed_plugin = Plugins.query.filter_by(name=plugin_name).first()
         # 插件已卸载
