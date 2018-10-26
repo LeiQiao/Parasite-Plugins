@@ -17,7 +17,7 @@ class BasePlugin(Plugin):
         if pa.plugin_manager is not None and pa.plugin_manager.get_plugin('base') is not None:
                 raise ValueError('realloc base plugin')
         # 默认创建数据库中不存在的表
-        self.__create_table = True
+        BasePlugin.__create_table = True
 
     def on_load(self):
         self.start_log_service()
@@ -97,7 +97,7 @@ class BasePlugin(Plugin):
 
     @Plugin.before_install
     def install_tables(self):
-        if not self.__create_table:
+        if not BasePlugin.__create_table:
             return
         # 获取模块的数据库表
         plugin = importlib.import_module('plugins.{0}'.format(self.plugin_name))
