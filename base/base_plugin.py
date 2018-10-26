@@ -99,7 +99,15 @@ class BasePlugin(Plugin):
     @Plugin.before_install
     def install_tables(self):
         # 获取模块的数据库表
-        plugin = importlib.import_module('plugins.{0}'.format(self.plugin_name))
+        module_name = self.__module__.split('.')[:-1]
+        reversed_module_name = reversed(module_name)
+        for name in reversed_module_name:
+            if name != self.plugin_name:
+                module_name = module_name[:-1]
+            else:
+                break
+        module_name = '.'.join(module_name)
+        plugin = importlib.import_module(module_name)
         plugin_tables = []
         for attribute_name in dir(plugin):
             if attribute_name.startswith('__'):
