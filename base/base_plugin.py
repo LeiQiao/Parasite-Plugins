@@ -12,12 +12,13 @@ import importlib
 
 
 class BasePlugin(Plugin):
+    __create_table = True
+
     def __init__(self, **kwargs):
         super(BasePlugin, self).__init__(**kwargs)
         if pa.plugin_manager is not None and pa.plugin_manager.get_plugin('base') is not None:
                 raise ValueError('realloc base plugin')
         # 默认创建数据库中不存在的表
-        BasePlugin.__create_table = True
 
     def on_load(self):
         self.start_log_service()
@@ -63,7 +64,7 @@ class BasePlugin(Plugin):
 
         # 加载数据库
         if 'create_table' in config_info['base']:
-            self.__create_table = (config_info['base']['create_table'] == '1')
+            BasePlugin.__create_table = (config_info['base']['create_table'] == '1')
         self.load_database(config_info['base']['db_uri'])
 
         # 加载插件
@@ -97,8 +98,6 @@ class BasePlugin(Plugin):
 
     @Plugin.before_install
     def install_tables(self):
-        if not BasePlugin.__create_table:
-            return
         # 获取模块的数据库表
         plugin = importlib.import_module('plugins.{0}'.format(self.plugin_name))
         plugin_tables = []
@@ -114,6 +113,11 @@ class BasePlugin(Plugin):
 
     @staticmethod
     def _install_table(table):
+        if not BasePlugin.__create_table:
+            if not table.__table__.exists(pa.database.engine):
+                pa.log.error('table \'{0}\' not exist.'.format(table.__tablename__))
+            return
+
         # 如果表记录为空则尝试删除原表重新创建新表
         try:
             if table.__table__.exists(pa.database.engine):
