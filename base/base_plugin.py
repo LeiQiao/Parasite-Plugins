@@ -16,6 +16,8 @@ class BasePlugin(Plugin):
         super(BasePlugin, self).__init__(**kwargs)
         if pa.plugin_manager is not None and pa.plugin_manager.get_plugin('base') is not None:
                 raise ValueError('realloc base plugin')
+        # 默认创建数据库中不存在的表
+        self.__create_table = True
 
     def on_load(self):
         self.start_log_service()
@@ -41,9 +43,12 @@ class BasePlugin(Plugin):
             pa.debug = True
 
         config_file = None
+        extra_plugins = []
         for opt in opts:
             if opt[0] == '-c':
                 config_file = opt[1]
+            elif opt[0] == '--extra_plugin':
+                extra_plugins = opt[1].split(',')
         if config_file is None:
             pa.log.info('no config file.')
             return
@@ -57,6 +62,8 @@ class BasePlugin(Plugin):
         pa.server_port = config_info['server']['port']
 
         # 加载数据库
+        if 'create_table' in config_info['base']:
+            self.__create_table = (config_info['base']['create_table'] == '1')
         self.load_database(config_info['base']['db_uri'])
 
         # 加载插件
@@ -77,10 +84,8 @@ class BasePlugin(Plugin):
         pa.plugin_manager.start(self, os.path.dirname(__file__))
 
         # 调试插件
-        for opt in opts:
-            if opt[0] == '--extra_plugin':
-                extra_plugin_path = opt[1]
-                pa.plugin_manager.load_extra_plugin(extra_plugin_path)
+        for extra_plugin in extra_plugins:
+                pa.plugin_manager.load_extra_plugin(extra_plugin.strip())
 
     @staticmethod
     def load_database(db_uri):
@@ -90,8 +95,10 @@ class BasePlugin(Plugin):
         pa.database.app = pa.web_app
         pa.database.init_app(pa.web_app)
 
-    #@Plugin.before_install
+    @Plugin.before_install
     def install_tables(self):
+        if not self.__create_table:
+            return
         # 获取模块的数据库表
         plugin = importlib.import_module('plugins.{0}'.format(self.plugin_name))
         plugin_tables = []

@@ -4,6 +4,8 @@ from .models import Plugins
 from pa.plugin import Plugin
 import importlib
 import ast
+import sys
+import errno
 
 
 class PluginManager:
@@ -15,7 +17,8 @@ class PluginManager:
         self.load_plugins()
 
     def load_extra_plugin(self, extra_plugin_path):
-        pass
+        manifest = self._load_plugin_manifest(extra_plugin_path)
+        self._load_plugin(manifest['name'], plugin_path=extra_plugin_path)
 
     def load_plugins(self):
         base_plugin = self.get_plugin('base')
@@ -96,32 +99,35 @@ class PluginManager:
         installed_plugin = self.get_plugin(plugin_name)
         if installed_plugin is not None:
             if plugin_version is not None and installed_plugin.manifest['version'] != plugin_version:
-                raise ModuleNotFoundError('plugin \'{0}\'installed version is not equal to required version'
-                                          ' {1} != {2}'
+                raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
                                           .format(plugin_name,
-                                                  installed_plugin.manifest['version'],
-                                                  plugin_version))
+                                                  plugin_version,
+                                                  installed_plugin.manifest['version']))
             return
 
         installed_plugin = Plugins.query.filter_by(name=plugin_name).first()
         # 插件已卸载
         if installed_plugin is not None and installed_plugin.installed == 0:
             if depend_by is not None:
-                raise ModuleNotFoundError('plugin \'{0}\'({1}) is uninstalled'
+                raise ModuleNotFoundError('plugin \'{0} ({1})\' is uninstalled'
                                           .format(plugin_name,
                                                   'any' if plugin_version is None else plugin_version))
             return
 
         if plugin_path is None:
             plugin_path = 'plugins'
+            plugin_module = '{0}.{1}'.format(plugin_path, plugin_name)
         else:
-            plugin_path = os.path.realpath(plugin_path)
-            rel_path = os.path.relpath(plugin_path, os.getcwd())
-            plugin_path = rel_path.replace('/', '.')
-        plugin = importlib.import_module('{0}.{1}'.format(plugin_path, plugin_name))
+            plugin_module = os.path.basename(plugin_path)
+            sys.path.insert(0, os.path.realpath(os.path.join(plugin_path, '..')))
+        plugin = importlib.import_module(plugin_module)
+        if not os.path.exists(os.path.join(plugin_path, '__init__.py')):
+            raise FileNotFoundError(errno.ENOENT,
+                                    os.strerror(errno.ENOENT),
+                                    os.path.join(plugin_path, '__init__.py'))
         manifest = self._load_plugin_manifest(os.path.dirname(plugin.__file__))
         if manifest is None:
-            raise ModuleNotFoundError('plugin \'{0}\'({1}) was not found \'__manifest__.py\' file'
+            raise ModuleNotFoundError('plugin \'{0} ({1})\' was not found \'__manifest__.py\' file'
                                       .format(plugin_name,
                                               'any' if plugin_version is None else plugin_version))
 
@@ -163,7 +169,7 @@ class PluginManager:
             if isinstance(attribute_value, type) and issubclass(attribute_value, Plugin):
                 plugin_class = attribute_value
         if plugin_class is None:
-            raise ModuleNotFoundError('plugin \'{0}\'{1} has not found enterance'
+            raise ModuleNotFoundError('plugin \'{0} ({1})\' has not found enterance'
                                       .format(manifest['name'],
                                               'any' if plugin_version is None else plugin_version))
 
