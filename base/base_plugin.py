@@ -99,7 +99,7 @@ class BasePlugin(Plugin):
     @Plugin.before_install
     def install_tables(self):
         # 获取模块的数据库表
-        module_name = self.get_module_name()
+        module_name = BasePlugin.get_module_name(self)
         plugin = importlib.import_module(module_name)
         plugin_tables = []
         for attribute_name in dir(plugin):
@@ -113,17 +113,17 @@ class BasePlugin(Plugin):
             BasePlugin._install_table(table)
 
     # 获取模块所在 sys.modules 中的名称
-    def get_module_name(self):
-        module_name = self.__module__.split('.')[:-1]
+    @staticmethod
+    def get_module_name(plugin):
+        module_name = plugin.__module__.split('.')[:-1]
         reversed_module_name = reversed(module_name)
         for name in reversed_module_name:
-            if name != self.plugin_name:
+            if name != plugin.plugin_name:
                 module_name = module_name[:-1]
             else:
                 break
         module_name = '.'.join(module_name)
         return module_name
-
 
     @staticmethod
     def _install_table(table):
