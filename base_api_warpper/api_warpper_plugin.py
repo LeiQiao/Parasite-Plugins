@@ -44,7 +44,7 @@ class APIWarpperPlugin(Plugin):
 
     @staticmethod
     def _get_func_in_module(plugin, func_name):
-        mod = sys.modules['plugins.{0}'.format(plugin.plugin_name)]
+        mod = sys.modules['{0}.{1}'.format(plugin.get_module_name(), func_name)]
         func = mod
         try:
             func_path = func_name.split('.')
