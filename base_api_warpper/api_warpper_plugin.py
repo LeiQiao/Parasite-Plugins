@@ -2,6 +2,7 @@ from pa.plugin import Plugin
 from flask import Blueprint
 import pa
 import sys
+from plugins.base import BasePlugin
 
 
 class APIWarpperPlugin(Plugin):
