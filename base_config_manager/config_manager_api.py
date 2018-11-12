@@ -1,7 +1,7 @@
 import pa
 from .config_model import ConfigModelRegister
 from flask import jsonify, request
-from plugins.base_api_warpper import internal_ip_required
+from plugins.base_api_wrapper import internal_ip_required
 
 
 @internal_ip_required()

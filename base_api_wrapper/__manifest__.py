@@ -1,6 +1,6 @@
 # noinspection PyStatementEffect
 {
-    'name': 'base_api_warpper',
+    'name': 'base_api_wrapper',
     'summary': '',
     'description': '可以在 manifest 中添加 api 并将其绑定到某个方法',
 

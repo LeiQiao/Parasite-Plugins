@@ -22,5 +22,5 @@
     'exports': ['config_manager_api'],
 
     # any plugin necessary for this one to work correctly
-    'depends': ['base', 'base_api_warpper']
+    'depends': ['base', 'base_api_wrapper']
 }

@@ -5,9 +5,9 @@ import sys
 from plugins.base import BasePlugin
 
 
-class APIWarpperPlugin(Plugin):
+class APIWrapperPlugin(Plugin):
     def on_load(self):
-        super(APIWarpperPlugin, self).on_load()
+        super(APIWrapperPlugin, self).on_load()
         internal_ip_list = pa.plugin_config[self.plugin_name]['internal_ip_list'].strip()
         if len(internal_ip_list) == 0:
             internal_ip_list = []
@@ -28,19 +28,19 @@ class APIWarpperPlugin(Plugin):
                 )
                 setattr(self, 'blueprint', blueprint)
                 for api_name, api_method in api.items():
-                    APIWarpperPlugin._regist_api(self, api_name, api_method)
+                    APIWrapperPlugin._regist_api(self, api_name, api_method)
                 pa.web_app.register_blueprint(blueprint)
 
     @staticmethod
     def _regist_api(plugin, api_name, api_method):
         blueprint = getattr(plugin, 'blueprint')
         if isinstance(api_method, str):
-            func = APIWarpperPlugin._get_func_in_module(plugin, api_method)
+            func = APIWrapperPlugin._get_func_in_module(plugin, api_method)
             blueprint.add_url_rule(api_name, view_func=func)
             return
 
         for method, func_name in api_method.items():
-            func = APIWarpperPlugin._get_func_in_module(plugin, func_name)
+            func = APIWrapperPlugin._get_func_in_module(plugin, func_name)
             blueprint.add_url_rule(api_name, view_func=func, methods=[method])
 
     @staticmethod
@@ -52,6 +52,6 @@ class APIWarpperPlugin(Plugin):
             for fn in func_path:
                 func = getattr(func, fn)
         except Exception as e:
-            pa.web_app.log.error('unable found api function \'{0}\''.format(func_name))
-            raise e
+            str(e)
+            raise ModuleNotFoundError('unable found api function \'{0}\''.format(func_name))
         return func

@@ -1,6 +1,6 @@
 from pa.plugin import Plugin
 import pa
-from .config import ServerConfig, APIWarpperConfig
+from .config import ServerConfig, APIWrapperConfig
 
 
 class ConfigManagerPlugin (Plugin):
@@ -14,11 +14,11 @@ class ConfigManagerPlugin (Plugin):
         if server_config.port is not None:
             pa.server_port = server_config.port
 
-        # 重新加载 base_api_warpper 的配置
-        api_warpper_config = APIWarpperConfig()
-        if api_warpper_config.real_ip_header is not None:
-            pa.plugin_config[api_warpper_config.__plugin_name__]['real_ip_header'] = \
-                api_warpper_config.real_ip_header
-        if api_warpper_config.internal_ip_list is not None:
-            pa.plugin_config[api_warpper_config.__plugin_name__]['internal_ip_list'] = \
-                api_warpper_config.internal_ip_list
+        # 重新加载 base_api_wrapper 的配置
+        api_wrapper_config = APIWrapperConfig()
+        if api_wrapper_config.real_ip_header is not None:
+            pa.plugin_config[api_wrapper_config.__plugin_name__]['real_ip_header'] = \
+                api_wrapper_config.real_ip_header
+        if api_wrapper_config.internal_ip_list is not None:
+            pa.plugin_config[api_wrapper_config.__plugin_name__]['internal_ip_list'] = \
+                api_wrapper_config.internal_ip_list

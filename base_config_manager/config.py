@@ -10,8 +10,8 @@ class ServerConfig(ConfigModel):
     port = ConfigModel.Column()
 
 
-class APIWarpperConfig(ConfigModel):
-    __plugin_name__ = 'base_api_warpper'
+class APIWrapperConfig(ConfigModel):
+    __plugin_name__ = 'base_api_wrapper'
 
     # 来源 IP 的头域
     real_ip_header = ConfigModel.Column()
