@@ -11,8 +11,6 @@
     'category': 'base',
     'version': '0.1',
 
-    'exports': ['config_manager_api'],
-
     # any plugin necessary for this one to work correctly
     'depends': ['base']
 }

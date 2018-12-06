@@ -11,6 +11,8 @@
     'category': 'base',
     'version': '0.1',
 
+    'exports': ['Schedule'],
+
     # any plugin necessary for this one to work correctly
     'depends': ['base']
 }
