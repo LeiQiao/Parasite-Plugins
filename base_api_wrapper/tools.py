@@ -15,7 +15,7 @@ def internal_ip_required():
             else:
                 real_ip = request.remote_addr
             # 判断是否内部 IP 地址访问，如果不是则返回鉴权失败
-            if real_ip == '127.0.0.1' or real_ip != '0.0.0.0':
+            if real_ip == '127.0.0.1' or real_ip == '0.0.0.0':
                 pass
             else:
                 real_ip_sction = real_ip.split('.')
