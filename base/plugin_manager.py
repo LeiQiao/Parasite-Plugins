@@ -115,9 +115,11 @@ class PluginManager:
             return
 
         if plugin_path is None:
+            install_after_load = True
             plugin_path = 'plugins'
             plugin_module = '{0}.{1}'.format(plugin_path, plugin_name)
         else:
+            install_after_load = False
             plugin_module = os.path.basename(plugin_path)
             sys.path.insert(0, os.path.realpath(os.path.join(plugin_path, '..')))
         plugin = importlib.import_module(plugin_module)
@@ -184,11 +186,12 @@ class PluginManager:
             plugin.on_before_install()
             plugin.on_install()
             plugin.on_after_install()
-            new_plugin = Plugins(name=manifest['name'],
-                                 version=manifest['version'],
-                                 installed=1)
-            pa.database.session.add(new_plugin)
-            pa.database.session.commit()
+            if install_after_load:
+                new_plugin = Plugins(name=manifest['name'],
+                                     version=manifest['version'],
+                                     installed=1)
+                pa.database.session.add(new_plugin)
+                pa.database.session.commit()
         elif installed_plugin.version != manifest['version']:
             # 升级插件
             plugin.on_upgrade(installed_plugin.version)
