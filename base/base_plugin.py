@@ -58,6 +58,16 @@ class BasePlugin(Plugin):
         if not success:
             raise ValueError('config file format error.')
 
+        # 插件的配置项
+        if pa.plugin_config is None:
+            pa.plugin_config = {}
+        for key in config_info.keys():
+            if key == 'base' or key == 'server':
+                continue
+            pa.plugin_config[key] = {}
+            for conf_key, conf_value in config_info[key].items():
+                pa.plugin_config[key][conf_key] = conf_value
+
         # 设置全局变量
         pa.server_ip = config_info['server']['ip']
         pa.server_port = config_info['server']['port']
@@ -70,16 +80,6 @@ class BasePlugin(Plugin):
         # 加载插件
         if pa.plugin_manager is None:
             pa.plugin_manager = PluginManager()
-
-        # 插件的配置项
-        if pa.plugin_config is None:
-            pa.plugin_config = {}
-        for key in config_info.keys():
-            if key == 'base' or key == 'server':
-                continue
-            pa.plugin_config[key] = {}
-            for conf_key, conf_value in config_info[key].items():
-                pa.plugin_config[key][conf_key] = conf_value
 
         # 将 base 加入到插件列表中
         pa.plugin_manager.start(self, os.path.dirname(__file__))
