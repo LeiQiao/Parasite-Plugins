@@ -33,7 +33,17 @@ def uninstall_plugin():
     # 删除插件文件夹
     plugin_path = os.path.join(pa_plugin_path, plugin_name)
     shutil.rmtree(plugin_path)
+
+    # 卸载插件
     if delete_plugin is not None:
+        plugin_module_name = delete_plugin.__module__.split('.')
+        if plugin_module_name[0] == 'plugins':
+            del sys.modules['{0}.{1}'.format(plugin_module_name[0], plugin_module_name[1])]
+        else:
+            module_path = os.path.join(os.path.dirname(sys.modules['{0}'.format(plugin_module_name[0])].__file__))
+            del sys.modules['{0}'.format(plugin_module_name[0])]
+            while module_path in sys.path:
+                sys.path.pop(sys.path.index(module_path))
         index = pa.plugin_manager.all_installed_plugins.index(delete_plugin)
         pa.plugin_manager.all_installed_plugins.pop(index)
 
