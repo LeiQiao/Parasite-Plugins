@@ -1,6 +1,5 @@
 import os
 import pa
-from .models import Plugins
 from pa.plugin import Plugin
 import importlib
 import ast
@@ -21,27 +20,9 @@ class PluginManager:
         self._load_plugin(manifest['name'], plugin_path=extra_plugin_path)
 
     def load_plugins(self):
-        base_plugin = self.get_plugin('base')
-
-        # 创建插件表，并将 base 插件写入表中
-        if not Plugins.__table__.exists(pa.database.engine):
-            Plugins.__table__.create(pa.database.engine)
-
-            base_plugin_record = Plugins(name=base_plugin.manifest['name'],
-                                         version=base_plugin.manifest['version'],
-                                         installed=1)
-            pa.database.session.add(base_plugin_record)
-            pa.database.session.commit()
-        else:
-            # 升级基础插件
-            base_plugin_record = Plugins.query.filter_by(name=base_plugin.manifest['name'], installed=1).first()
-            if base_plugin_record is not None and \
-                    base_plugin_record.version != base_plugin.manifest['version']:
-                base_plugin.on_upgrade(base_plugin_record.version)
-
         # 遍历插件文件夹获取所有所有插件
         plugin_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        loaded_plugins = []
+        plugins_need_load = []
         for root, dirs, files in os.walk(plugin_path):
             if plugin_path != root:
                 continue
@@ -49,28 +30,24 @@ class PluginManager:
                 # trim '__pacache__' etc.
                 if plugin_name.startswith('__'):
                     continue
-                self._load_plugin(plugin_name)
-                loaded_plugins.append(plugin_name)
-        try:
-            all_plugins = Plugins.query.all()
-            removed_plugins = []
-            for plugin in all_plugins:
-                if plugin.name in loaded_plugins:
-                    continue
-                removed_plugins.append(plugin.id)
-        except Exception as e:
-            str(e)
-            pa.log.error('loading plugin: unable load all installed plugins')
-            raise e
+                plugins_need_load.append(plugin_name)
 
-        if len(removed_plugins) > 0:
-            try:
-                Plugins.query.filter(Plugins.id.in_(removed_plugins)).delete(synchronize_session='fetch')
-                pa.database.session.commit()
-            except Exception as e:
-                str(e)
-                pa.log.error('unable remove non exists plugin')
-                raise e
+        load_sequence = []
+        if 'plugins' in pa.plugin_config['base']:
+            load_sequence = pa.plugin_config['base']['plugins'].split(',')
+        for plugin_name in reversed(load_sequence):
+            plugin_name = plugin_name.strip()
+            if len(plugin_name) == 0:
+                continue
+
+            if plugin_name in plugins_need_load:
+                plugins_need_load.pop(plugins_need_load.index(plugin_name))
+                plugins_need_load.insert(0, plugin_name)
+            else:
+                pa.log.warning('unable found plugin \'\' which is ordered in config file'.format(plugin_name))
+
+        for plugin_name in plugins_need_load:
+            self._load_plugin(plugin_name)
 
     @staticmethod
     def get_plugin(plugin_name):
@@ -105,21 +82,10 @@ class PluginManager:
                                                   installed_plugin.manifest['version']))
             return
 
-        installed_plugin = Plugins.query.filter_by(name=plugin_name).first()
-        # 插件已卸载
-        if installed_plugin is not None and installed_plugin.installed == 0:
-            if depend_by is not None:
-                raise ModuleNotFoundError('plugin \'{0} ({1})\' is uninstalled'
-                                          .format(plugin_name,
-                                                  'any' if plugin_version is None else plugin_version))
-            return
-
         if plugin_path is None:
-            install_after_load = True
             plugin_path = 'plugins'
             plugin_module = '{0}.{1}'.format(plugin_path, plugin_name)
         else:
-            install_after_load = False
             plugin_module = os.path.basename(plugin_path)
             sys.path.insert(0, os.path.realpath(os.path.join(plugin_path, '..')))
         plugin = importlib.import_module(plugin_module)
@@ -179,24 +145,6 @@ class PluginManager:
 
         # 添加到已加载的插件列表
         self.all_installed_plugins.append(plugin)
-
-        # 查看模块是否已经安装
-        if installed_plugin is None:
-            # 安装插件
-            plugin.on_before_install()
-            plugin.on_install()
-            plugin.on_after_install()
-            if install_after_load:
-                new_plugin = Plugins(name=manifest['name'],
-                                     version=manifest['version'],
-                                     installed=1)
-                pa.database.session.add(new_plugin)
-                pa.database.session.commit()
-        elif installed_plugin.version != manifest['version']:
-            # 升级插件
-            plugin.on_upgrade(installed_plugin.version)
-            installed_plugin.version = manifest['version']
-            pa.database.session.commit()
 
         # 加载模块
         plugin.on_before_load()

@@ -1,2 +1,1 @@
 from .acm_config_manager_plugin import ACMConfigManagerPlugin
-from .acm_config_model import ACMConfigModel

@@ -1,4 +1,2 @@
-from .config_manager_plugin import ConfigManagerPlugin
-from .models import Configuration
+from .base_config_manager_plugin import BaseConfigManagerPlugin
 from . import config_manager_api
-from .config_model import ConfigModel

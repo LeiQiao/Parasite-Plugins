@@ -6,7 +6,6 @@ import shutil
 import os
 import pa
 import sys
-from plugins.base.models import Plugins
 from pa.bin.download_source import pa_root, get_all_depend_manifest, download_plugin
 import zipfile
 
@@ -82,26 +81,21 @@ def _install_plugin(plugin_path, temp_path):
 
     # 下载并加载所有插件
     all_depend_plugin = {}
-    uninstalled_plugin = []
     for depend_name, depend_manifest in depend_plugins.items():
         # 查看插件是否已经安装并且版本匹配
-        try:
-            installed_plugin = Plugins.query.filter_by(name=depend_manifest['name']).first()
-        except Exception as e:
-            raise IOError('unable fetch table \'Plugins\' {0}'.format(e))
+        installed_plugin = None
+        for plugin in pa.plugin_manager.all_installed_plugins:
+            if plugin.manifest['name'] == depend_name:
+                installed_plugin = plugin
 
-        if installed_plugin is not None and installed_plugin.installed:
-            if installed_plugin.version != depend_manifest['version']:
+        if installed_plugin is not None:
+            if installed_plugin.manifest['version'] != depend_manifest['version']:
                 raise ModuleNotFoundError('plugin \'{0}\' already installed, '
                                           'but version is not match (need: {1} found: {2})'
                                           .format(depend_manifest['name'],
                                                   depend_manifest['version'],
-                                                  installed_plugin.version))
+                                                  installed_plugin.manifest['version']))
             continue
-
-        # 标记当前插件已经被卸载，在安装完成后需要删除数据库记录，以便重新安装
-        if installed_plugin is not None:
-            uninstalled_plugin.append(installed_plugin)
 
         # 将插件下载到临时文件夹
         depend_temp_path = os.path.join(temp_path, depend_name)
@@ -109,18 +103,11 @@ def _install_plugin(plugin_path, temp_path):
         if not os.path.exists(depend_temp_path):
             with tempfile.TemporaryDirectory() as temp_path_2:
                 download_plugin(pa_root, depend_name, temp_path_2, temp_path)
+                shutil.copytree(os.path.join(temp_path, 'plugins', depend_name), depend_temp_path)
+                shutil.rmtree(os.path.join(temp_path, 'plugins'))
 
         # 尝试从临时文件夹中加载插件，加载失败则会抛出异常导致安装失败
         pa.plugin_manager.load_extra_plugin(depend_temp_path)
-
-    # 删除数据库中已卸载的插件
-    try:
-        for plugin in uninstalled_plugin:
-            pa.database.session.delete(plugin)
-        if len(uninstalled_plugin) > 0:
-            pa.database.session.commit()
-    except Exception as e:
-        raise IOError('unable delete record from table \'Plugins\' {0}'.format(e))
 
     # 插件下载并预加载完毕，将插件拷贝到插件文件夹中
     pa_plugin_path = os.path.dirname(sys.modules['plugins'].__file__)
