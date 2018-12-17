@@ -36,18 +36,20 @@ class RedisClient(object):
     def hgetall(self, name):
         hget_result = dict(self._connection.hgetall(name))
         # 处理取出的二进制数据并且转成str重新赋值
+        return_result = dict()
         for k in hget_result:
             key = bytes.decode(k)
             value = bytes.decode(hget_result.get(k))
-            hget_result.pop(k)
-            hget_result[key] = value
-        return hget_result
+            return_result[key] = value
+        return return_result
 
     def hset(self, name, key, value):
         self._connection.hset(name, key, value)
 
-    def hmset(self, key, value):
+    def hmset(self, key, value, ex=0):
         self._connection.hmset(key, value)
+        if ex > 0:
+            self._connection.expire(key, ex)
 
     def get_connection(self):
         return self._connection
