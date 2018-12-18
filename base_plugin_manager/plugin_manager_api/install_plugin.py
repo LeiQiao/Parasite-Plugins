@@ -20,6 +20,8 @@ def install_plugin():
     if git_url is not None and len(git_url) > 0:
         if branch is None or len(branch) == 0:
             branch = 'master'
+        if path is None:
+            return 'path is empty', 400
         if len(path) > 0:
             if path[0] == '/':
                 path = path[1:]
