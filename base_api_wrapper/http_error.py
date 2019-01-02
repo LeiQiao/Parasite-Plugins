@@ -21,6 +21,8 @@ class CustomHTTPError(Exception):
             self.status_code = status_code
 
     def jsonify(self):
+        if self.response_code is None:
+            return ''
         return flask_jsonify({
             'return_code': self.response_code.code,
             'message': self.response_code.message
