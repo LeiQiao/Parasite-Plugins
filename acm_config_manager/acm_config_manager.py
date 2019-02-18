@@ -27,6 +27,9 @@ class ACMConfigManager(ConfigOperator):
     @staticmethod
     def update_all_config():
         acm_config = ACMConfigManager._load_config_from_acm()
+        if acm_config is None:
+            return
+        
         for config_name, config_dict in acm_config.items():
             if config_name not in pa.plugin_config:
                 pa.plugin_config[config_name] = config_dict
@@ -43,7 +46,8 @@ class ACMConfigManager(ConfigOperator):
                                  pa.plugin_config['acm_config_manager']['ak'],
                                  pa.plugin_config['acm_config_manager']['sk'])
         else:
-            raise ModuleNotFoundError('ACM configuration not found in config file')
+            pa.log.warning('ACM configuration not found in config file')
+            return None
 
         config_str = _acm.get(pa.plugin_config['acm_config_manager']['data_id'],
                               pa.plugin_config['acm_config_manager']['group'])
