@@ -27,7 +27,7 @@ class OSSClient:
                     continue
                 return True
             except Exception as e:
-                pa.log.error('oss_client: upload file error. retry: ' + str(retry_time + 1) + '/' + str(retry_times), e)
+                pa.log.error('oss_client: upload file error. retry: {0}/{1} {2}'.format(str(retry_time + 1), str(retry_times), e))
                 time.sleep(retry_interval)
                 continue
 
@@ -59,7 +59,7 @@ class OSSClient:
             bucket = oss2.Bucket(auth, self.upload_end_point, self.bucket_name)
             remote_stream = bucket.get_object(file_name)
         except Exception as e:
-            pa.log.error('oss_client: upload file error.', e)
+            pa.log.error('oss_client: download file error: \n{0}'.format(e))
             return None
 
         return remote_stream
@@ -74,7 +74,7 @@ class OSSClient:
             if result.status < 200 or result.status > 299:
                 return False
         except Exception as e:
-            pa.log.error('oss_client: delete file error.', e)
+            pa.log.error('oss_client: delete file error: \n{0}'.format(e))
             return False
         return True
 
