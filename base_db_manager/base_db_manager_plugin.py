@@ -109,7 +109,7 @@ class BaseDBManagerPlugin(Plugin):
         elif key == 'autoincrement':
             matching = True
         elif key == 'primary_key':
-            matching = (old_column_value == 1)
+            matching = (old_column_value > 0)
             matching = (matching == new_column_value)
         elif key == 'default':
             matching = True
