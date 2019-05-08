@@ -85,10 +85,13 @@ class PluginManager:
         if plugin_path is None:
             plugin_path = 'plugins'
             plugin_module = '{0}.{1}'.format(plugin_path, plugin_name)
+            clone_plugin_module = plugin_name
         else:
             plugin_module = os.path.basename(plugin_path)
+            clone_plugin_module = 'plugins.{0}'.format(plugin_name)
             sys.path.insert(0, os.path.realpath(os.path.join(plugin_path, '..')))
         plugin = importlib.import_module(plugin_module)
+        sys.modules[clone_plugin_module] = sys.modules[plugin_module]
         if not os.path.exists(os.path.join(plugin_path, '__init__.py')):
             raise FileNotFoundError(errno.ENOENT,
                                     os.strerror(errno.ENOENT),
