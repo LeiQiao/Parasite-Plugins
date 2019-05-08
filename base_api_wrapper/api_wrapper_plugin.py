@@ -22,7 +22,7 @@ class APIWrapperPlugin(Plugin):
             if api is not None and len(api) > 0:
                 # 注册接口
                 blueprint = Blueprint(
-                    name=self.manifest['name'],
+                    name='{0}_{1}_blueprint'.format(self.manifest['name'], SimpleHTMLPlugin.__pluginname__),
                     import_name=__name__,
                     url_prefix=''
                 )
