@@ -6,6 +6,8 @@ from plugins.base import BasePlugin
 
 
 class APIWrapperPlugin(Plugin):
+    __pluginname__ = 'base_api_wrapper'
+    
     def on_load(self):
         super(APIWrapperPlugin, self).on_load()
         internal_ip_list = pa.plugin_config[self.plugin_name]['internal_ip_list'].strip()
@@ -22,7 +24,7 @@ class APIWrapperPlugin(Plugin):
             if api is not None and len(api) > 0:
                 # 注册接口
                 blueprint = Blueprint(
-                    name='{0}_{1}_blueprint'.format(self.manifest['name'], SimpleHTMLPlugin.__pluginname__),
+                    name='{0}_{1}_blueprint'.format(self.manifest['name'], APIWrapperPlugin.__pluginname__),
                     import_name=__name__,
                     url_prefix=''
                 )
