@@ -2,6 +2,7 @@ from pa.plugin import Plugin
 from plugins.base import BasePlugin
 import importlib
 from sqlalchemy import inspect, func
+from sqlalchemy.orm.properties import ColumnProperty
 import pa
 from .db_config import DBConfig
 
@@ -65,7 +66,11 @@ class BaseDBManagerPlugin(Plugin):
         # 获取原表和新表的列
         iengine = inspect(pa.database.engine)
         old_cols = iengine.get_columns(table.__tablename__)
-        new_cols = inspect(table).attrs
+        new_cols_temp = inspect(table).attrs
+        new_cols = []
+        for col in new_cols_temp:
+            if isinstance(col, ColumnProperty):
+                new_cols.append(col)
         if len(old_cols) != len(new_cols):
             raise TypeError('exists table has {0} columns but new table needs {1} columns in table \'{2}\''
                             .format(len(old_cols), len(new_cols), table.__tablename__))
