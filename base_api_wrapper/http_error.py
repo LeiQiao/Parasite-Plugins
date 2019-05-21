@@ -39,6 +39,14 @@ def handle_http_error(error):
     # response 返回 error 发生时定义的标准错误代码
     status_code = error.status_code
 
+    # log 错误信息
+    if status_code != 200:
+        pa.log.error('%s %s %s \"%s\"',
+                     http_request.method,
+                     http_request.path,
+                     status_code,
+                     error.response_code.message if error.response_code is not None else '')
+
     return response, status_code
 
 
