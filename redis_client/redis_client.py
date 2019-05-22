@@ -2,7 +2,14 @@ import redis
 
 
 class RedisClient(object):
-    def __init__(self, host, port, max_connections=2000, auth=None, db=0):
+    def __init__(self, host=None, port=None, max_connections=2000, auth=None, db=None):
+        # 使用全局配置初始化 redis
+        if host is None and port is None and auth is None and db is None:
+            config = RedisConfig()
+            host = config.redis_host
+            port = config.redis_port
+            auth = config.redis_auth
+            db = config.redis_db
         # 初始化redis链接
         if auth is None or auth.strip() is '':
             auth = None
