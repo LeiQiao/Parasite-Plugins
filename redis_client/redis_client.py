@@ -1,4 +1,5 @@
 import redis
+from .config import RedisConfig
 
 
 class RedisClient(object):
