@@ -44,11 +44,18 @@ def handle_http_error(error):
 
     # log 错误信息
     if status_code != 200:
+        if isinstance(error.response_code, CustomResponseCode):
+            message = error.response_code.message
+        elif error.response_code is None:
+            message = ''
+        else:
+            message = str(error.response_code)
+        
         pa.log.error('%s %s %s \"%s\"',
                      http_request.method,
                      http_request.path,
                      status_code,
-                     error.response_code.message if error.response_code is not None else '')
+                     message)
 
     return response, status_code
 
