@@ -23,10 +23,13 @@ class CustomHTTPError(Exception):
     def jsonify(self):
         if self.response_code is None:
             return ''
-        return flask_jsonify({
-            'return_code': self.response_code.code,
-            'message': self.response_code.message
-        })
+        if isinstance(self.response_code, CustomResponseCode):
+            return flask_jsonify({
+                'return_code': self.response_code.code,
+                'message': self.response_code.message
+            })
+        else:
+            return self.response_code
 
 
 # flask 错误处理，装饰器来控制使用 CustomHTTPError
