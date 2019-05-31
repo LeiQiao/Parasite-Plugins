@@ -32,6 +32,16 @@ class BasePlugin(Plugin):
         import logging
         logger = logging.getLogger()
         logger.addHandler(logging.StreamHandler())
+        # 捕捉异常
+        sys.excepthook = BasePlugin.handle_exception
+
+    @staticmethod
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+
+        pa.log.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
     def load_config(self):
         opts, args = getopt.getopt(sys.argv[1:], 'c:', ['debug', 'extra_plugin='])

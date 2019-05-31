@@ -19,17 +19,11 @@ class SimpleHTMLPlugin(Plugin):
             return
 
         # 注册接口
-        blueprint = None
-        for bp in pa.web_app.iter_blueprints():
-            if bp.name == self.manifest['name']:
-                blueprint = bp
-                break
-        if blueprint is None:
-            blueprint = Blueprint(
-                name=self.manifest['name'],
-                import_name=__name__,
-                url_prefix=''
-            )
+        blueprint = Blueprint(
+            name='{0}_{1}_blueprint'.format(self.manifest['name'], SimpleHTMLPlugin.__pluginname__),
+            import_name=__name__,
+            url_prefix=''
+        )
         setattr(self, 'blueprint', blueprint)
         spc_files = {}
         setattr(self, 'blueprint_route', spc_files)

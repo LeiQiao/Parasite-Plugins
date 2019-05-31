@@ -63,12 +63,12 @@ class ConfigModel(metaclass=ConfigModelRegister):
             config_item_value = config_item_column.default
             if config_item_name in config_json:
                 config_item_value = config_json[config_item_name]
+                if config_item_column.deserializer is not None:
+                    config_item_value = config_item_column.deserializer(config_item_value)
             elif not isinstance(getattr(self, config_item_name), ConfigModel.Column):
                 # 如果新的 json 中没有该 key，并且该 key 已经被设置过则不设置默认值
                 continue
 
-            if config_item_column.deserializer is not None:
-                config_item_value = config_item_column.deserializer(config_item_value)
             notify = False
             # 第一次设置不需要通知配置变更
             if not isinstance(getattr(self, config_item_name), ConfigModel.Column):
