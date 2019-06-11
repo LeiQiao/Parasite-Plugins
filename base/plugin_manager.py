@@ -137,7 +137,9 @@ class PluginManager:
             if attribute_name.startswith('__'):
                 continue
             attribute_value = getattr(plugin, attribute_name)
-            if isinstance(attribute_value, type) and issubclass(attribute_value, Plugin):
+            if isinstance(attribute_value, type) and \
+               issubclass(attribute_value, Plugin) and \
+               getattr(attribute_value, '__pluginname__') == manifest['name']:
                 plugin_class = attribute_value
         if plugin_class is None:
             raise ModuleNotFoundError('plugin \'{0} ({1})\' has not found enterance'
