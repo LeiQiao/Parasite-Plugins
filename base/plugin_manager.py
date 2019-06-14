@@ -85,18 +85,18 @@ class PluginManager:
         if plugin_path is None:
             plugin_path = 'plugins'
             plugin_module = '{0}.{1}'.format(plugin_path, plugin_name)
+            plugin_path = os.path.join(plugin_path, plugin_name)
             clone_plugin_module = plugin_name
         else:
             plugin_module = os.path.basename(plugin_path)
             clone_plugin_module = 'plugins.{0}'.format(plugin_name)
             sys.path.insert(0, os.path.realpath(os.path.join(plugin_path, '..')))
-        plugin = importlib.import_module(plugin_module)
-        sys.modules[clone_plugin_module] = sys.modules[plugin_module]
+
         if not os.path.exists(os.path.join(plugin_path, '__init__.py')):
             raise FileNotFoundError(errno.ENOENT,
                                     os.strerror(errno.ENOENT),
                                     os.path.join(plugin_path, '__init__.py'))
-        manifest = self._load_plugin_manifest(os.path.dirname(plugin.__file__))
+        manifest = self._load_plugin_manifest(plugin_path)
         if manifest is None:
             raise ModuleNotFoundError('plugin \'{0} ({1})\' was not found \'__manifest__.py\' file'
                                       .format(plugin_name,
@@ -130,6 +130,10 @@ class PluginManager:
             new_depend_by = depend_by[:]
             new_depend_by.append(plugin_name)
             self._load_plugin(depend_name, depend_version, None, new_depend_by)
+
+        # 加载模块
+        plugin = importlib.import_module(plugin_module)
+        sys.modules[clone_plugin_module] = sys.modules[plugin_module]
 
         # 获取模块的入口对象
         plugin_class = None
