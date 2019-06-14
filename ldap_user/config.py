@@ -1,7 +1,6 @@
 from base.config_model import ConfigModel
 import ldap
 import pa
-from base_api_wrapper.http_error import HTTPSystemError
 
 
 class LDAPUserConfig(ConfigModel):

@@ -1,7 +1,7 @@
 from flask import request
 import functools
 from redis_client import RedisClient
-from record_api.error_message import authorization_error
+from base_api_wrapper.http_error import *
 from ldap_user.i18n import *
 
 

@@ -1,6 +1,6 @@
 from flask import request, Response
 from .config import LDAPUserConfig
-from record_api.error_message import *
+from base_api_wrapper.http_error import *
 from .i18n import *
 import uuid
 from redis_client.redis_client import RedisClient

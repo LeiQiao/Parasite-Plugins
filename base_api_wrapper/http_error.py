@@ -88,3 +88,24 @@ class HTTPNotFoundError(CustomHTTPError):
 class HTTPRedirectError(CustomHTTPError):
     def __init__(self, response_code=None):
         CustomHTTPError.__init__(self, response_code, 302)
+
+
+# 自定义成功
+def custom_success(ret_object=None, message='成功', status_code=200):
+    return_json = {
+        'return_code': '90000',
+        'message': message
+    }
+
+    if ret_object is not None:
+        return_json['data'] = ret_object
+
+    return flask_jsonify(return_json), status_code
+
+
+def parameter_error(error_message='参数错误'):
+    return HTTPParameterError(CustomResponseCode(90100, error_message))
+
+
+def authorization_error(error_message='UNAUTHORIZAED'):
+    return HTTPAuthorizationError(CustomResponseCode(90101, error_message))
