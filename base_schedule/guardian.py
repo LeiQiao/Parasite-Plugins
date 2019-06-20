@@ -6,7 +6,8 @@ from datetime import datetime
 
 
 def worker_process(schedule_id, work_class, schedule_time):
-    if work_class.__base__ != Schedule:
+    # 这里需要使用 __name__ 进行比较
+    if work_class.__base__.__name__ != Schedule.__name__:
         raise ImportError('schedule class \'{0}\' is not a subclass of \'Schedule\''.format(work_class))
 
     schedule = work_class()
