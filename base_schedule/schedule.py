@@ -9,6 +9,7 @@ class Schedule:
         self.time = None
         self.schedule_id = None
         self.next_runtime = None
+        self.run_times = 0
 
     def start(self, schedule_time, schedule_id):
         self.time = schedule_time
@@ -26,7 +27,7 @@ class Schedule:
     def sleep(self):
         timeinterval = (self.next_runtime - datetime.now()).total_seconds()
         if timeinterval < 0:
-            pa.log.warning('schedule {0} delay {1}ms'.format(self.schedule_id, -int(timeinterval*1000)))
+            pa.log.debug('schedule {0} delay {1}ms'.format(self.schedule_id, -int(timeinterval*1000)))
         else:
             pa.log.debug('schedule {0} sleep, wake up at {1}'.format(self.schedule_id, self.next_runtime))
             sleep(timeinterval)
