@@ -11,7 +11,8 @@
     'version': '0.1',
 
     'api': {
-        '/user/session': 'user_api.session',
+        '/user/token': 'user_api.gen_token',
+        '/user/captcha': 'user_api.gen_captcha',
         '/user/login': {
             'POST': 'user_api.login'
         },

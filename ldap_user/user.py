@@ -7,15 +7,22 @@ from ldap_user.i18n import *
 
 class LDAPUser:
     @staticmethod
-    def _get_session_by_key(key):
-        session_id = request.cookies.get('session_id', None)
+    def _get_token_by_key(key):
+        token = request.headers.get('token', None)
 
-        if session_id is None:
+        if token is None and request.args is not None:
+            token = request.args.get('token', None)
+        if token is None and request.form is not None:
+            token = request.form.get('token', None)
+        if token is None and request.json is not None:
+            token = request.json.get('token', None)
+
+        if token is None:
             raise authorization_error(i18n(USER_NOT_LOGIN_ERROR))
 
         redis_client = RedisClient()
 
-        user_session = redis_client.get_json(session_id)
+        user_session = redis_client.get_json(token)
 
         if user_session is None or key not in user_session:
             raise authorization_error(i18n(USER_SESSION_EXPIRED_ERROR))
@@ -24,11 +31,11 @@ class LDAPUser:
 
     @staticmethod
     def current_user_id():
-        return LDAPUser._get_session_by_key('user_id')
+        return LDAPUser._get_token_by_key('user_id')
 
     @staticmethod
     def current_user_name():
-        return LDAPUser._get_session_by_key('cn_name')
+        return LDAPUser._get_token_by_key('cn_name')
 
     @staticmethod
     def login_required():

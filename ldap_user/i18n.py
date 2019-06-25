@@ -1,6 +1,7 @@
 from i18n import *
 
 
+TOKEN_EXPIRED = I18n.regist(zh_CN='回话失效，请刷新页面')
 USER_PASSWORD_ERROR = I18n.regist(zh_CN='用户名密码错误')
 LOGIN_ERROR = I18n.regist(zh_CN='无法验证用户名密码')
 LOGIN_CAPTCHA_MISMATCH_ERROR = I18n.regist(zh_CN='验证码不正确')
