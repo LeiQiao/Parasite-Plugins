@@ -135,6 +135,12 @@ class PluginManager:
         plugin = importlib.import_module(plugin_module)
         sys.modules[clone_plugin_module] = sys.modules[plugin_module]
 
+        keys = list(sys.modules.keys())
+        for key in keys:
+            if key.startswith(plugin_module + '.'):
+                clone_key = clone_plugin_module + key[len(plugin_module):]
+                sys.modules[clone_key] = sys.modules[key]
+
         # 获取模块的入口对象
         plugin_class = None
         for attribute_name in dir(plugin):
