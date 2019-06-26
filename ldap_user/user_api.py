@@ -106,14 +106,18 @@ def login():
 
 def search_cn_name_from_ldap(user_name):
     ldap_config = LDAPUserConfig()
+    ldap_service = ldap.initialize(ldap_config.ldap_url)
+    ldap_service.protocol_version = ldap.VERSION3
+
     try:
         user_name = user_name.split('@')[0]
         search_filter = '(sAMAccountName=' + user_name + ')'
-        ldap_result_id = ldap_config.ldap_service.search(ldap_config.ldap_dn,
-                                                         ldap.SCOPE_SUBTREE,
-                                                         search_filter,
-                                                         None)
-        result_type, result_data = ldap_config.ldap_service.result(ldap_result_id, 0)
+        ldap_service.simple_bind_s(ldap_config.ldap_admin_user_name, ldap_config.ldap_admin_password)
+        ldap_result_id = ldap_service.search(ldap_config.ldap_dn,
+                                             ldap.SCOPE_SUBTREE,
+                                             search_filter,
+                                             None)
+        result_type, result_data = ldap_service.result(ldap_result_id, 0)
         if result_type == ldap.RES_SEARCH_ENTRY:
             return result_data[0][1]['cn'][0].decode('utf-8')
         else:
@@ -134,11 +138,14 @@ def search_users():
         raise parameter_error(i18n(USER_NAME_EMPTY_ERROR))
 
     ldap_config = LDAPUserConfig()
+    ldap_service = ldap.initialize(ldap_config.ldap_url)
+    ldap_service.protocol_version = ldap.VERSION3
 
     search_user_results = []
     try:
         search_filter = '(UserPrincipalName=*' + user_name + '*)'
-        users = ldap_config.ldap_service.search_s(ldap_config.ldap_dn, ldap.SCOPE_SUBTREE, search_filter, None)
+        ldap_service.simple_bind_s(ldap_config.ldap_admin_user_name, ldap_config.ldap_admin_password)
+        users = ldap_service.search_s(ldap_config.ldap_dn, ldap.SCOPE_SUBTREE, search_filter, None)
         for user in users:
             search_user_results.append({
                 'user_id': user[1]['mail'][0].decode('utf-8'),
