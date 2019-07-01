@@ -2,16 +2,17 @@
 
 版本号： v1.0.0
 
-修改时间： 2019-05-27
+修改时间： 2019-06-27
 
 作者： 乔磊
 
 
-## 获取登陆图形验证码
+
+## 获取 TOKEN
 
 方法：`GET`
 
-地址：`/user/session`
+地址：`/user/token`
 
 
 
@@ -23,24 +24,54 @@
 
 返回参数：
 
-图形验证码的图片内容
-
-
-
-Cookies：
-
-接口返回时会设置浏览器 Cookies
-
-| key | 描述 |
-|------------|---------------|
-| session_id | 登陆或登陆后使用当前 session_id 代表用户登陆 HMAS |
+| 名称  | 字段类型 | 描述  |
+| ----- | -------- | ----- |
+| token | String   | token |
 
 
 
 示例：
 
 ```python
->>> requests.get('http://127.0.0.1:5002/session')
+>>> requests.get('http://127.0.0.1:5002/user/token').text
+
+'{
+    "data": {
+        "token": "xxxx"
+    },
+    "message": "登录成功",
+    "return_code": "90000"
+}'
+```
+
+
+
+## 获取登陆图形验证码
+
+方法：`GET`
+
+地址：`/user/captcha`
+
+
+
+请求参数：
+
+| 名称  | 字段类型 | 必须 | 描述                           |
+| ----- | -------- | ---- | ------------------------------ |
+| token | String   | Y    | 获取 token 接口返回的 token 值 |
+
+
+
+返回参数：
+
+图形验证码的图片内容
+
+
+
+示例：
+
+```python
+>>> requests.get('http://127.0.0.1:5002/captcha?token=xxxx')
 
 <Response [200]>
 ```
@@ -64,6 +95,7 @@ Cookies：
 |user_name|String| Y | 域账号用户邮箱 |
 |password| String| Y | 域账号密码 |
 |captcha | String | Y | 图形验证码 |
+|token | String | Y | token |
 
 
 
@@ -76,12 +108,12 @@ Cookies：
 |cn_name|String| 中文名 |
 |user_id|String| 域账号用户邮箱 |
 
-
+* 登录成功后所有需要用户鉴权的接口都需要将 token 添加到请求体中
 
 示例：
 
 ```python
->>> requests.post('http://127.0.0.1:5002/user/login', data={'user_name': 'xxxx@huifu.com', 'password': '*****', 'captcha': '0000'}, cookies={'session_id': 'xxxxxx'}).text
+>>> requests.post('http://127.0.0.1:5002/user/login', data={'user_name': 'xxxx@huifu.com', 'password': '*****', 'captcha': '0000', 'token': 'xxxx'}).text
 
 '{
     "data": {
@@ -108,6 +140,7 @@ Cookies：
 | 名称      | 字段类型 | 必须 | 描述           |
 | --------- | -------- | ---- | -------------- |
 | user_name | String   | Y    | 域账号用户邮箱 |
+| token     | String   | Y    | token          |
 
 
 
@@ -125,7 +158,7 @@ Cookies：
 示例：
 
 ```python
->>> requests.post('http://127.0.0.1:5002/user/search', data={'user_name': 'san'}, cookies={'session_id': 'xxxxxx'}).text
+>>> requests.post('http://127.0.0.1:5002/user/search', data={'user_name': 'san', 'token': 'xxxxxx'}).text
 
 '{
     "data": [
