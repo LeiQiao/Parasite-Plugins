@@ -113,12 +113,12 @@
 示例：
 
 ```python
->>> requests.post('http://127.0.0.1:5002/user/login', data={'user_name': 'xxxx@huifu.com', 'password': '*****', 'captcha': '0000', 'token': 'xxxx'}).text
+>>> requests.post('http://127.0.0.1:5002/user/login', data={'user_name': 'xxxx@yyyyy.com', 'password': '*****', 'captcha': '0000', 'token': 'xxxx'}).text
 
 '{
     "data": {
         "cn_name": "xxxx",
-        "user_id": "xxxx@huifu.com"
+        "user_id": "xxxx@yyyyy.com"
     },
     "message": "登录成功",
     "return_code": "90000"
@@ -164,15 +164,15 @@
     "data": [
         {
             "cn_name": "张三",
-            "user_id": "san.zhang@huifu.com"
+            "user_id": "san.zhang@yyyyy.com"
         },
         {
             "cn_name": "王三",
-            "user_id": "san.wang@huifu.com"
+            "user_id": "san.wang@yyyyy.com"
         },
         {
             "cn_name": "离散",
-            "user_id": "san.li@huifu.com"
+            "user_id": "san.li@yyyyy.com"
         }
     ],
     "message": "成功",
