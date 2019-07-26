@@ -304,7 +304,11 @@ class RecordGetAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch record {0}'.format(e))
             raise fetch_database_error()
 
-        record = self._event_handler.execute_after_query_handler(self, record)
+        records = self._event_handler.execute_after_query_handler(self, [record])
+        if len(records) > 0:
+            record = records[0]
+        else:
+            record = None
 
         if record is None:
             raise record_not_found_error()
