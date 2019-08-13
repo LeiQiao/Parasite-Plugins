@@ -44,6 +44,7 @@ class ScheduleGuardian(Process):
             'class_name': class_name,
             'schedule_time': schedule_time
         })
+        pa.log.info('regist schedule job {0}:{1} {2}'.format(schedule_id, class_name, schedule_time))
 
     def run(self):
         if not self.locker.lock():
@@ -58,8 +59,10 @@ class ScheduleGuardian(Process):
                'schedule_id' not in value or \
                'class_name'not in value or \
                'schedule_time' not in value:
+                pa.log.info('drop schedule job {0}'.format(value))
                 continue
 
+            pa.log.info('run schedule job {0}:{1}'.format(value['schedule_id'], value['class_name']))
             job_process = Process(target=worker_process,
                                   args=(value['schedule_id'], value['class_name'], value['schedule_time']))
             job_process.start()
