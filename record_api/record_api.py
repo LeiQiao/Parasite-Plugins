@@ -34,7 +34,10 @@ class RecordAPI:
     def get_parameter(self, parameter_name, default_value=None):
         if parameter_name not in self._request:
             return default_value
-        return self._request[parameter_name]
+        value = self._request[parameter_name]
+        if len(value) == 0:
+            return default_value
+        return value
 
     def add_input(self, *args):
         for field in args:
