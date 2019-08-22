@@ -1,7 +1,6 @@
 from plugins.base_api_wrapper.tools import internal_ip_required
 from flask import request
 import tempfile
-import git
 import shutil
 import os
 import pa
@@ -27,6 +26,7 @@ def install_plugin():
                 path = path[1:]
         with tempfile.TemporaryDirectory() as temp_path:
             try:
+                import git
                 git.Repo.clone_from(url=git_url, to_path=temp_path, branch=branch)
                 _install_plugins([os.path.join(temp_path, path)])
             except Exception as e:
