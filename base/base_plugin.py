@@ -13,8 +13,9 @@ from .server_config import ServerConfig
 class BasePlugin(Plugin):
     def __init__(self, **kwargs):
         super(BasePlugin, self).__init__(**kwargs)
+        self.plugin_path = os.path.dirname(__file__)
         if pa.plugin_manager is not None and pa.plugin_manager.get_plugin('base') is not None:
-                raise ValueError('realloc base plugin')
+            raise ValueError('realloc base plugin')
         # 默认创建数据库中不存在的表
 
     def on_load(self):

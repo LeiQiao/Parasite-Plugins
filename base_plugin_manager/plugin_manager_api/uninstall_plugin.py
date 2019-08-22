@@ -1,7 +1,6 @@
 from plugins.base_api_wrapper.tools import internal_ip_required
 from flask import request
 import sys
-import os
 import pa
 import shutil
 
@@ -13,11 +12,7 @@ def uninstall_plugin():
     if plugin_name is None or len(plugin_name) == 0:
         return 'plugin_name is empty', 400
 
-    # 插件文件夹是否存在
-    pa_plugin_path = os.path.dirname(sys.modules['plugins'].__file__)
-    if not os.path.exists(os.path.join(pa_plugin_path, plugin_name)):
-        return 'plugin not exists', 400
-
+    # 获取要删除的插件
     delete_plugin = None
     for plugin in pa.plugin_manager.all_installed_plugins:
         if plugin.manifest['name'] == plugin_name:
@@ -30,23 +25,20 @@ def uninstall_plugin():
                 return 'uninstall plugin error: plugin \'{0}\' ' \
                        'depend on this plugin'.format(plugin.manifest['name']), 400
 
+    # 插件不存在
+    if delete_plugin is None:
+        return 'plugin not exists', 400
+
+    plugin_path = delete_plugin.plugin_path
+
+    # 卸载插件，但插件在其它模块里注册的信息不会被卸载
+    del sys.modules[delete_plugin.__module__]
+    if plugin_path in sys.path:
+        sys.path.pop(sys.path.index(plugin_path))
+    index = pa.plugin_manager.all_installed_plugins.index(delete_plugin)
+    pa.plugin_manager.all_installed_plugins.pop(index)
+
     # 删除插件文件夹
-    plugin_path = os.path.join(pa_plugin_path, plugin_name)
     shutil.rmtree(plugin_path)
-
-    # 卸载插件
-    if delete_plugin is not None:
-        plugin_module_name = delete_plugin.__module__.split('.')
-        if plugin_module_name[0] == 'plugins':
-            del sys.modules['{0}.{1}'.format(plugin_module_name[0], plugin_module_name[1])]
-        else:
-            module_path = os.path.join(os.path.dirname(sys.modules['{0}'.format(plugin_module_name[0])].__file__))
-            del sys.modules['{0}'.format(plugin_module_name[0])]
-            while module_path in sys.path:
-                sys.path.pop(sys.path.index(module_path))
-        index = pa.plugin_manager.all_installed_plugins.index(delete_plugin)
-        pa.plugin_manager.all_installed_plugins.pop(index)
-
-    # todo: 强制删除插件的数据库表
 
     return 'Uninstall success, Please restart Parasite to take effect', 200

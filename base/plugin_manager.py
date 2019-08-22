@@ -17,7 +17,7 @@ class PluginManager:
 
     def load_extra_plugin(self, extra_plugin_path):
         manifest = self._load_plugin_manifest(extra_plugin_path)
-        self._load_plugin(manifest['name'], plugin_path=extra_plugin_path)
+        return self._load_plugin(manifest['name'], plugin_path=extra_plugin_path)
 
     def load_plugins(self):
         # 遍历插件文件夹获取所有所有插件
@@ -80,7 +80,7 @@ class PluginManager:
                                           .format(plugin_name,
                                                   plugin_version,
                                                   installed_plugin.manifest['version']))
-            return
+            return None
 
         if plugin_path is None:
             plugin_path = 'plugins'
@@ -156,7 +156,7 @@ class PluginManager:
                                       .format(manifest['name'],
                                               'any' if plugin_version is None else plugin_version))
 
-        plugin = plugin_class(plugin_name=plugin_name, manifest=manifest)
+        plugin = plugin_class(plugin_name=plugin_name, manifest=manifest, plugin_path=plugin_path)
 
         # 添加到已加载的插件列表
         self.all_installed_plugins.append(plugin)
@@ -165,3 +165,5 @@ class PluginManager:
         plugin.on_before_load()
         plugin.on_load()
         plugin.on_after_load()
+
+        return plugin
