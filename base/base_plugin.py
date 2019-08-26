@@ -27,7 +27,7 @@ class BasePlugin(Plugin):
         # 创建必须的log文件夹
         check_sub_path_create('log')
         # 日志文件路径
-        set_log_file(os.path.join(os.path.abspath('log'), 'server.log'))
+        set_log_file(file_name_format='%project_name-%date-%log')
         pa.log = fishbase_logger
         # add stdout log output
         import logging
