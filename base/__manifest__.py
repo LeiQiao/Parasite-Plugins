@@ -6,7 +6,7 @@
 
     'author': '',
     'website': '',
-    'source': {'git': 'http://172.31.13.131:8088/parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'git@172.31.13.131:parasite/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'base',
     'version': '0.1',

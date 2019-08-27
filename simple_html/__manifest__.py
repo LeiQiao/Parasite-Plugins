@@ -5,7 +5,7 @@
     'description': '简单的 HTML 页面模板，可以注册指定的 HTML 页面，也可以通过继承的方式改变页面的内容',
     'author': '',
     'website': '',
-    'source': {'git': 'http://172.31.13.131:8088/parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'git@172.31.13.131:parasite/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'html',
     'version': '0.1',

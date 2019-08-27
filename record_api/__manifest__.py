@@ -5,7 +5,7 @@
     'description': '提供简单的增删改查的接口来操作数据库记录',
     'author': '',
     'website': '',
-    'source': {'git': 'http://172.31.13.131:8088/parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'git@172.31.13.131:parasite/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': '',
     'version': '0.1',

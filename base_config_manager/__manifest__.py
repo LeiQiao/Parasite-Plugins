@@ -5,7 +5,7 @@
     'description': '配置管理模块，提供接口级的配置管理功能',
     'author': '',
     'website': '',
-    'source': {'git': 'http://172.31.13.131:8088/parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'git@172.31.13.131:parasite/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'tools',
     'version': '0.1',
