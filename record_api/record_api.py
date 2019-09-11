@@ -426,6 +426,9 @@ class RecordEditAPI(RecordAPI):
 
         records = self._event_handler.execute_before_commit_handler(self, records, new_record=False)
 
+        if len(records) == 0:
+            raise record_not_found_error()
+
         try:
             pa.database.session.commit()
         except Exception as e:
