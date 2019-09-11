@@ -17,11 +17,12 @@ class JFile:
         self.session = requests.Session()
 
     @staticmethod
-    def _md5(fname):
+    def _md5(fp):
         hash_md5 = hashlib.md5()
-        with open(fname, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash_md5.update(chunk)
+        fp.seek(0)
+        for chunk in iter(lambda: fp.read(4096), b""):
+            hash_md5.update(chunk)
+        fp.seek(0)
         return hash_md5.hexdigest()
 
     @staticmethod
@@ -49,7 +50,7 @@ class JFile:
                 reason = 'System Error'
             raise ConnectionError(response.status_code, reason)
 
-    def upload(self, file_name, remote_path=None, encrypt=False, password=None, private=True, random_name=False):
+    def upload(self, fp, remote_path=None, encrypt=False, password=None, private=True, random_name=False):
         is_private = '1' if private else '0'
         is_random_name = '1' if random_name else '0'
         is_encrypt = '1' if encrypt else '0'
@@ -73,8 +74,12 @@ class JFile:
             remote_path = ''
 
         # 根据参数 key 的值 顺序拼接其 value , 实际做代码操作时, 可以使用排序方法拼接更为合适, 以下只做例子展示
-        files = open(file_name, 'rb')
-        md5_file = self._md5(file_name)
+        if isinstance(fp, str):
+            files = open(fp, 'rb')
+        else:
+            files = fp
+        md5_file = self._md5(files)
+        files.seek(0)
         plain_text = self._pack_signature('POST', {
             'app_token': self.app_token,
             'timestamp': file_info['timestamp'],
