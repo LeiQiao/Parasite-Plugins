@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import json
 import time
+import os
 
 
 class JFile:
@@ -50,7 +51,11 @@ class JFile:
                 reason = 'System Error'
             raise ConnectionError(response.status_code, reason)
 
-    def upload(self, fp, remote_path=None, encrypt=False, password=None, private=True, random_name=False):
+    def upload(self, file_name, remote_path=None, encrypt=False, password=None, private=True, random_name=False):
+        with open(file_name, 'rb') as f:
+            return self.upload_fp(f, os.path.basename(file_name), remote_path, encrypt, password, private, random_name)
+
+    def upload_fp(self, fp, file_name, remote_path=None, encrypt=False, password=None, private=True, random_name=False):
         is_private = '1' if private else '0'
         is_random_name = '1' if random_name else '0'
         is_encrypt = '1' if encrypt else '0'
@@ -94,7 +99,7 @@ class JFile:
         signature = hmac.new(bytes(self.app_key, 'utf8'), bytes(plain_text, 'utf8'), digestmod=hashlib.sha256)
         file_info['signature'] = signature.hexdigest()
         # 上传文件
-        response = self.session.post(self.url, files={'files': files}, data=file_info)  # 发送请求
+        response = self.session.post(self.url, files={'files': (file_name, files)}, data=file_info)  # 发送请求
         print(response.headers)
         self._raise_request_error(response)
         # 返回 file-token
