@@ -3,6 +3,7 @@ from .record_event import RecordEventHandler
 import pa
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from .i18n import *
+from sqlalchemy import exc
 
 
 class RecordAPI:
@@ -514,6 +515,9 @@ class RecordDeleteAPI(RecordAPI):
             for record in records:
                 pa.database.session.delete(record)
             pa.database.session.commit()
+        except exc.IntegrityError as e:
+            pa.log.error('RecordAPIPlugin: unable delete records {0}'.format(e))
+            raise parameter_error(i18n(RESTRICT_DELETE_RECORD_ERROR))
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable delete records {0}'.format(e))
             raise update_database_error()
