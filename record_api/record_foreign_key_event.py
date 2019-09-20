@@ -31,4 +31,10 @@ def cascade_delete(condition):
 
     delete_api = RecordDeleteAPI(model_class, None)
     delete_api.add_input(RecordFilter(getattr(model_class, field_name)))
-    delete_api.handle_request({'postbe_id': value}, {})
+    try:
+        delete_api.handle_request({field_name: value}, {})
+    except HTTPNotFoundError as e:
+        str(e)
+        return
+    except Exception as e:
+        raise e

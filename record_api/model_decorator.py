@@ -171,7 +171,9 @@ class RecordFieldEditor:
         if record not in RecordFieldEditor._field_value_wait_for_flush:
             # invoke onflush
             if record.__class__.__name__ in RecordFieldEditor._all_record_flush:
-                RecordFieldEditor._all_record_flush[record.__class__.__name__](record)
+                funcs = RecordFieldEditor._all_record_flush[record.__class__.__name__]
+                for func in funcs:
+                    func(record)
             return
         record_wait_for_flush = RecordFieldEditor._field_value_wait_for_flush[record]
         for record_field in record_wait_for_flush:
