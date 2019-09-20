@@ -3,6 +3,7 @@ from .record_event import RecordEventHandler
 import pa
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from .i18n import *
+from sqlalchemy import exc
 
 
 class RecordAPI:
@@ -90,31 +91,45 @@ class RecordAPI:
 
     @staticmethod
     def _api_handler(record_api):
-        return record_api.handle_request()
+        return record_api.handle_http_request()
 
-    def handle_request(self):
+    def handle_http_request(self):
         if self._json_data_form:
             try:
-                self._request = http_request.json
+                request = http_request.json
             except Exception as e:
                 pa.log.error(e)
                 raise parameter_error(i18n(READ_JSON_BODY_ERROR))
         else:
             if http_request.method == 'POST' or http_request.method == 'PUT' or http_request.method == 'DELETE':
-                self._request = http_request.form
+                request = http_request.form
             else:
-                self._request = http_request.args
-        self._request_headers = http_request.headers
+                request = http_request.args
+        request_headers = http_request.headers
 
         try:
             if self._json_data_form:
-                req_str = str(self._request)
+                req_str = str(request)
             else:
-                req_str = str(self._request.to_dict())
+                req_str = str(request.to_dict())
             pa.log.info('请求报文: %s', req_str)
         except Exception as e:
             pa.log.error(e)
             pass
+
+        response = self.handle_request(request, request_headers)
+
+        try:
+            pa.log.info('返回报文: %s', str(response))
+        except Exception as e:
+            pa.log.error(e)
+            pass
+
+        return custom_success(response)
+
+    def handle_request(self, request, request_headers):
+        self._request = request
+        self._request_headers = request_headers
 
         self._event_handler.execute_before_request_handler(self, self._request, self._request_headers)
         self.handle()
@@ -123,13 +138,7 @@ class RecordAPI:
                                                                            self._response,
                                                                            self._request_headers)
 
-        try:
-            pa.log.info('返回报文: %s', str(self._response))
-        except Exception as e:
-            pa.log.error(e)
-            pass
-
-        return custom_success(self._response)
+        return self._response
 
     # Overridable -- handle model event
     def handle(self):
@@ -514,9 +523,18 @@ class RecordDeleteAPI(RecordAPI):
             for record in records:
                 pa.database.session.delete(record)
             pa.database.session.commit()
+        except exc.IntegrityError as e:
+            pa.log.error('RecordAPIPlugin: unable delete records {0}'.format(e))
+            raise parameter_error(i18n(RESTRICT_DELETE_RECORD_ERROR))
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable delete records {0}'.format(e))
             raise update_database_error()
+
+        for record in records:
+            try:
+                RecordFieldEditor.enddelete(record)
+            except Exception as e:
+                raise parameter_error(str(e))
 
         self._event_handler.execute_after_delete_handler(self)
 

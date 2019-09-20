@@ -34,6 +34,12 @@ class ri:
         return decorated
 
     @staticmethod
+    def enddelete():
+        def decorated(func):
+            RecordFieldEditor.add_end_delete(ri.get_class_name_from_function(func), func)
+        return decorated
+
+    @staticmethod
     def field(field_name):
         def decorated(func):
             RecordFieldExtend.add_field(ri.get_class_name_from_function(func), field_name, func)
@@ -49,12 +55,27 @@ class ri:
 
         return decorated
 
+    @staticmethod
+    def foreign_ondelete(foreign_model):
+        def decorated(func):
+            RecordFieldEditor.add_delete(foreign_model.__name__, func)
+            return func
+        return decorated
+
+    @staticmethod
+    def foreign_enddelete(foreign_model):
+        def decorated(func):
+            RecordFieldEditor.add_end_delete(foreign_model.__name__, func)
+            return func
+        return decorated
+
 
 class RecordFieldEditor:
     _all_record_field = []
     _all_record_flush = {}
     _all_record_end_flush = {}
     _all_record_delete = {}
+    _all_record_end_delete = {}
     _field_value_wait_for_flush = {}
 
     def __init__(self, model_name, field_names, func):
@@ -78,6 +99,10 @@ class RecordFieldEditor:
     @staticmethod
     def add_delete(model_name, func):
         RecordFieldEditor._all_record_delete[model_name] = func
+
+    @staticmethod
+    def add_end_delete(model_name, func):
+        RecordFieldEditor._all_record_end_delete[model_name] = func
 
     @staticmethod
     def onchange(record, field_name, value):
@@ -155,6 +180,7 @@ class RecordFieldEditor:
 
     @staticmethod
     def endflush(record):
+        # invoke endflush
         if record.__class__.__name__ in RecordFieldEditor._all_record_end_flush:
             RecordFieldEditor._all_record_end_flush[record.__class__.__name__](record)
 
@@ -163,6 +189,12 @@ class RecordFieldEditor:
         # invoke ondelete
         if record.__class__.__name__ in RecordFieldEditor._all_record_delete:
             RecordFieldEditor._all_record_delete[record.__class__.__name__](record)
+
+    @staticmethod
+    def enddelete(record):
+        # invoke enddelete
+        if record.__class__.__name__ in RecordFieldEditor._all_record_end_delete:
+            RecordFieldEditor._all_record_end_delete[record.__class__.__name__](record)
 
 
 class RecordFieldExtend:
