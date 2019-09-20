@@ -90,19 +90,35 @@ class RecordFieldEditor:
 
     @staticmethod
     def add_flush(model_name, func):
-        RecordFieldEditor._all_record_flush[model_name] = func
+        funcs = []
+        if model_name in RecordFieldEditor._all_record_flush:
+            funcs = RecordFieldEditor._all_record_flush[model_name]
+        funcs.append(func)
+        RecordFieldEditor._all_record_flush[model_name] = funcs
 
     @staticmethod
     def add_end_flush(model_name, func):
-        RecordFieldEditor._all_record_end_flush[model_name] = func
+        funcs = []
+        if model_name in RecordFieldEditor._all_record_end_flush:
+            funcs = RecordFieldEditor._all_record_end_flush[model_name]
+        funcs.append(func)
+        RecordFieldEditor._all_record_end_flush[model_name] = funcs
 
     @staticmethod
     def add_delete(model_name, func):
-        RecordFieldEditor._all_record_delete[model_name] = func
+        funcs = []
+        if model_name in RecordFieldEditor._all_record_delete:
+            funcs = RecordFieldEditor._all_record_delete[model_name]
+        funcs.append(func)
+        RecordFieldEditor._all_record_delete[model_name] = funcs
 
     @staticmethod
     def add_end_delete(model_name, func):
-        RecordFieldEditor._all_record_end_delete[model_name] = func
+        funcs = []
+        if model_name in RecordFieldEditor._all_record_end_delete:
+            funcs = RecordFieldEditor._all_record_end_delete[model_name]
+        funcs.append(func)
+        RecordFieldEditor._all_record_end_delete[model_name] = funcs
 
     @staticmethod
     def onchange(record, field_name, value):
@@ -176,25 +192,33 @@ class RecordFieldEditor:
         del RecordFieldEditor._field_value_wait_for_flush[record]
         # invoke onflush
         if record.__class__.__name__ in RecordFieldEditor._all_record_flush:
-            RecordFieldEditor._all_record_flush[record.__class__.__name__](record)
+            funcs = RecordFieldEditor._all_record_flush[record.__class__.__name__]
+            for func in funcs:
+                func(record)
 
     @staticmethod
     def endflush(record):
         # invoke endflush
         if record.__class__.__name__ in RecordFieldEditor._all_record_end_flush:
-            RecordFieldEditor._all_record_end_flush[record.__class__.__name__](record)
+            funcs = RecordFieldEditor._all_record_end_flush[record.__class__.__name__]
+            for func in funcs:
+                func(record)
 
     @staticmethod
     def delete(record):
         # invoke ondelete
         if record.__class__.__name__ in RecordFieldEditor._all_record_delete:
-            RecordFieldEditor._all_record_delete[record.__class__.__name__](record)
+            funcs = RecordFieldEditor._all_record_delete[record.__class__.__name__]
+            for func in funcs:
+                func(record)
 
     @staticmethod
     def enddelete(record):
         # invoke enddelete
         if record.__class__.__name__ in RecordFieldEditor._all_record_end_delete:
-            RecordFieldEditor._all_record_end_delete[record.__class__.__name__](record)
+            funcs = RecordFieldEditor._all_record_end_delete[record.__class__.__name__]
+            for func in funcs:
+                func(record)
 
 
 class RecordFieldExtend:
