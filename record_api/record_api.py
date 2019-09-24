@@ -164,7 +164,7 @@ class RecordAPI:
 
     # decorate
     @staticmethod
-    def _get_record_api(route, method):
+    def get_record_api(route, method):
         for api in RecordAPI._all_record_api:
             if api.get_route() != route:
                 continue
@@ -176,37 +176,37 @@ class RecordAPI:
     @staticmethod
     def before_query(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_before_query(func)
+            RecordAPI.get_record_api(route, method).add_before_query(func)
         return decorated
 
     @staticmethod
     def after_query(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_after_query(func)
+            RecordAPI.get_record_api(route, method).add_after_query(func)
         return decorated
 
     @staticmethod
     def before_commit(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_before_commit(func)
+            RecordAPI.get_record_api(route, method).add_before_commit(func)
         return decorated
 
     @staticmethod
     def after_commit(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_after_commit(func)
+            RecordAPI.get_record_api(route, method).add_after_commit(func)
         return decorated
 
     @staticmethod
     def before_request(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_before_request(func)
+            RecordAPI.get_record_api(route, method).add_before_request(func)
         return decorated
 
     @staticmethod
     def after_request(route, method='GET'):
         def decorated(func):
-            RecordAPI._get_record_api(route, method).add_after_request(func)
+            RecordAPI.get_record_api(route, method).add_after_request(func)
         return decorated
 
 
