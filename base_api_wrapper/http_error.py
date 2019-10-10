@@ -1,4 +1,4 @@
-from flask import jsonify as flask_jsonify, request as http_request
+from flask import jsonify as flask_jsonify, request as http_request, Response
 import pa
 
 
@@ -92,6 +92,9 @@ class HTTPRedirectError(CustomHTTPError):
 
 # 自定义成功
 def custom_success(ret_object=None, message='成功', status_code=200):
+    if isinstance(ret_object, Response):
+        return ret_object
+
     return_json = {
         'return_code': '90000',
         'message': message
