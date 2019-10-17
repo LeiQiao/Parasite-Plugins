@@ -1,5 +1,4 @@
 import re
-import os
 import io
 
 
@@ -66,7 +65,7 @@ class BaseFrame:
                                   .format(self.__class__.__name__))
 
     @staticmethod
-    def _render(frame_content, route_content, keyword, start_tag='{%', end_tag='%}'):
+    def _render(frame_content, route_content, keyword, start_tag='\{\%', end_tag='\%\}'):
         pattern = '{0}[\s]*{1}[\s]*{2}'.format(start_tag, keyword, end_tag)
         render_content = re.sub(pattern, route_content, frame_content)
         return render_content
@@ -75,15 +74,39 @@ class BaseFrame:
 class SimpleFrame(BaseFrame):
     def __init__(self, title=''):
         self.title = title
-        root_path = os.path.dirname(__file__)
-        fp = open(os.path.join(root_path, 'html/simple_frame.html'))
-        self.frame_content = fp.read()
-        fp.close()
+        self.keywords = {}
+
+    def add_keyword(self, keyword, r):
+        self.keywords[keyword] = r
 
     def render(self, route, route_fp, encode='utf8'):
-        route_content = route_fp.read().decode(encode)
-        render_content = self.frame_content
-        render_content = BaseFrame._render(render_content, self.title, 'title')
-        render_content = BaseFrame._render(render_content, route_content, 'content')
+        render_content = route_fp.read().decode(encode)
+        for k, r in self.keywords.items():
+            r = self._to_js_code(r)
+            render_content = BaseFrame._render(render_content, r, k)
         fp = io.BytesIO(render_content.encode(encode))
         return fp
+
+    def _to_js_code(self, r):
+        if isinstance(r, str) or isinstance(r, int) or isinstance(r, float):
+            return r
+        elif isinstance(r, list):
+            s = '['
+            for v in r:
+                if isinstance(v, str):
+                    v = '\"{0}\"'.format(v)
+                else:
+                    v = self._to_js_code(v)
+                s += '{0}, '.format(v)
+            s = s[:-2] + ']'
+            return s
+        elif isinstance(r, dict):
+            s = '{'
+            for k, v in r.items():
+                if isinstance(v, str):
+                    v = '\"{0}\"'.format(v)
+                else:
+                    v = self._to_js_code(v)
+                s += '{0}: {1}, '.format(k, v)
+            s = s[:-2] + '}'
+            return s
