@@ -67,11 +67,6 @@ class BasePlugin(Plugin):
         if not success:
             raise ValueError('config file format error.')
 
-        # 设置 Parasite 服务的 IP 和端口
-        sc = ServerConfig()
-        pa.server_ip = sc.ip
-        pa.server_port = sc.port
-
         # 插件的配置项
         if pa.plugin_config is None:
             pa.plugin_config = {}
@@ -79,6 +74,11 @@ class BasePlugin(Plugin):
             pa.plugin_config[key] = {}
             for conf_key, conf_value in config_info[key].items():
                 pa.plugin_config[key][conf_key] = conf_value
+
+        # 设置 Parasite 服务的 IP 和端口
+        sc = ServerConfig()
+        pa.server_ip = sc.ip
+        pa.server_port = sc.port
 
         # 加载插件
         if pa.plugin_manager is None:
