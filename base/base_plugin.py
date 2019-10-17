@@ -75,6 +75,11 @@ class BasePlugin(Plugin):
             for conf_key, conf_value in config_info[key].items():
                 pa.plugin_config[key][conf_key] = conf_value
 
+        # 设置 Parasite 服务的 IP 和端口
+        sc = ServerConfig()
+        pa.server_ip = sc.ip
+        pa.server_port = sc.port
+
         # 加载插件
         if pa.plugin_manager is None:
             pa.plugin_manager = PluginManager()
@@ -85,11 +90,6 @@ class BasePlugin(Plugin):
         # 调试插件
         for extra_plugin in extra_plugins:
                 pa.plugin_manager.load_extra_plugin(extra_plugin.strip())
-
-        # 设置 Parasite 服务的 IP 和端口
-        sc = ServerConfig()
-        pa.server_ip = sc.ip
-        pa.server_port = sc.port
 
     # 获取模块所在 sys.modules 中的名称
     @staticmethod
