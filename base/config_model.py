@@ -63,6 +63,15 @@ class ConfigModel(metaclass=ConfigModelRegister):
             config_item_value = config_item_column.default
             if config_item_name in config_json:
                 config_item_value = config_json[config_item_name]
+
+                # 调试参数，调试参数为参数名称+".debug"，例如：host 的调试参数为 host.debug
+                # 只有当 host 在配置文件中指定时，host.debug 才会在调试时生效
+                if pa.debug and '{0}.debug'.format(config_item_name) in config_json:
+                    config_item_value = config_json['{0}.debug'.format(config_item_name)]
+                    # 如果 xxx.debug 参数为空则使用代码中的默认参数代替
+                    if len(config_item_value) == 0:
+                        config_item_value = config_item_column.default
+
                 if config_item_column.deserializer is not None:
                     config_item_value = config_item_column.deserializer(config_item_value)
             elif not isinstance(getattr(self, config_item_name), ConfigModel.Column):
