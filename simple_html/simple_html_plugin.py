@@ -57,6 +57,8 @@ class SimpleHTMLPlugin(Plugin):
             else:
                 if len(files) > 1 or route[-1] == '/':
                     file_route = os.path.join(route, os.path.basename(file_path))
+                elif route[-8:] == '/<index>':
+                    file_route = route[:-7]
                 else:
                     file_route = route
                 route_files[file_route] = file_path
