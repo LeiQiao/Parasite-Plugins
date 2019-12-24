@@ -94,7 +94,8 @@ class OSSClient:
         return file_url
         
     def replace_private_download_domain(self, url):
-        if (self.download_domain is None) return url;
+        if self.download_domain is None:
+            return url
         sec = url.split('/')
         sec[2] = self.download_domain
         url = '/'.join(sec)
