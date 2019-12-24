@@ -4,14 +4,13 @@ import time
 
 
 class OSSClient:
-    def __init__(self, upload_end_point, download_end_point, key_id, key_secret, bucket_name, public_download_domain, private_download_domain):
+    def __init__(self, upload_end_point, download_end_point, key_id, key_secret, bucket_name, download_domain):
         self.upload_end_point = upload_end_point
         self.download_end_point = download_end_point
         self.key_id = key_id
         self.key_secret = key_secret
         self.bucket_name = bucket_name
-        self.public_download_domain = public_download_domain
-        self.private_download_domain = private_download_domain
+        self.download_domain = download_domain
 
     # 将文件上传至阿里云 OSS
     def upload_file(self, file, file_name, private=True, retry_times=1, retry_interval=100):
@@ -83,8 +82,8 @@ class OSSClient:
 
     def get_public_download_url(self, file_name):
         file_url = ''
-        if self.public_download_domain is not None and len(self.public_download_domain) > 0:
-            file_url = self.public_download_domain
+        if self.download_domain is not None and len(self.download_domain) > 0:
+            file_url = self.download_domain
             if file_url[:-1] != '/':
                 file_url += '/'
             file_url += file_name
@@ -95,9 +94,9 @@ class OSSClient:
         return file_url
         
     def replace_private_download_domain(self, url):
-        if (self.private_download_domain is None) return url;
+        if (self.download_domain is None) return url;
         sec = url.split('/')
-        sec[2] = self.private_download_domain
+        sec[2] = self.download_domain
         url = '/'.join(sec)
         return url
         
