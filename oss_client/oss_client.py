@@ -94,10 +94,19 @@ class OSSClient:
         return file_url
         
     def replace_private_download_domain(self, url):
-        if self.download_domain is None:
+        if self.download_domain is None or len(self.download_domain) == 0:
             return url
         sec = url.split('/')
-        sec[2] = self.download_domain
+
+        if self.download_domain[:7].lower() == 'http://':
+            sec[0] = 'http:'
+            sec[2] = self.download_domain[7:]
+        elif self.download_domain[:8].lower() == 'https://':
+            sec[0] = 'https:'
+            sec[2] = self.download_domain[8:]
+        else:
+            sec[2] = self.download_domain
+
         url = '/'.join(sec)
         return url
         
