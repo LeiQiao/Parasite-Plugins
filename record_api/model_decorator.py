@@ -27,6 +27,13 @@ class ri:
         return decorated
 
     @staticmethod
+    def endadd():
+        def decorated(func):
+            RecordFieldEditor.add_end_add(ri.get_class_name_from_function(func), func)
+            return func
+        return decorated
+
+    @staticmethod
     def ondelete():
         def decorated(func):
             RecordFieldEditor.add_delete(ri.get_class_name_from_function(func), func)
@@ -56,6 +63,27 @@ class ri:
         return decorated
 
     @staticmethod
+    def foreign_onflush(foreign_model):
+        def decorated(func):
+            RecordFieldEditor.add_flush(foreign_model.__name__, func)
+            return func
+        return decorated
+
+    @staticmethod
+    def foreign_endflush(foreign_model):
+        def decorated(func):
+            RecordFieldEditor.add_end_flush(foreign_model.__name__, func)
+            return func
+        return decorated
+
+    @staticmethod
+    def foreign_endadd(foreign_model):
+        def decorated(func):
+            RecordFieldEditor.add_end_add(foreign_model.__name__, func)
+            return func
+        return decorated
+
+    @staticmethod
     def foreign_ondelete(foreign_model):
         def decorated(func):
             RecordFieldEditor.add_delete(foreign_model.__name__, func)
@@ -74,6 +102,7 @@ class RecordFieldEditor:
     _all_record_field = []
     _all_record_flush = {}
     _all_record_end_flush = {}
+    _all_record_end_add = {}
     _all_record_delete = {}
     _all_record_end_delete = {}
     _field_value_wait_for_flush = {}
@@ -103,6 +132,14 @@ class RecordFieldEditor:
             funcs = RecordFieldEditor._all_record_end_flush[model_name]
         funcs.append(func)
         RecordFieldEditor._all_record_end_flush[model_name] = funcs
+
+    @staticmethod
+    def add_end_add(model_name, func):
+        funcs = []
+        if model_name in RecordFieldEditor._all_record_end_add:
+            funcs = RecordFieldEditor._all_record_end_add[model_name]
+        funcs.append(func)
+        RecordFieldEditor._all_record_end_add[model_name] = funcs
 
     @staticmethod
     def add_delete(model_name, func):
@@ -203,6 +240,14 @@ class RecordFieldEditor:
         # invoke endflush
         if record.__class__.__name__ in RecordFieldEditor._all_record_end_flush:
             funcs = RecordFieldEditor._all_record_end_flush[record.__class__.__name__]
+            for func in funcs:
+                func(record)
+
+    @staticmethod
+    def endadd(record):
+        # invoke endadd
+        if record.__class__.__name__ in RecordFieldEditor._all_record_end_add:
+            funcs = RecordFieldEditor._all_record_end_add[record.__class__.__name__]
             for func in funcs:
                 func(record)
 

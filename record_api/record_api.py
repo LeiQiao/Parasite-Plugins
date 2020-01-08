@@ -376,6 +376,7 @@ class RecordAddAPI(RecordAPI):
             raise update_database_error()
 
         RecordFieldEditor.endflush(new_record)
+        RecordFieldEditor.endadd(new_record)
 
         self._event_handler.execute_after_commit_handler(self)
 
