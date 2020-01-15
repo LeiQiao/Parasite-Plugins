@@ -39,7 +39,10 @@ class RecordField:
             if RecordFieldEditor.onchange(record, self.field_name, value):
                 return
         except Exception as e:
-            raise parameter_error(str(e))
+            if isinstance(e, CustomHTTPError):
+                raise e
+            else:
+                raise parameter_error(str(e))
 
         if not hasattr(record, self.field_name):
             raise record_field_not_found_error(i18n(FIELD_NOT_EXIST_ERROR)
@@ -51,7 +54,10 @@ class RecordField:
         try:
             value = RecordFieldExtend.record_value(record, self.field_name)
         except Exception as e:
-            raise parameter_error(str(e))
+            if isinstance(e, CustomHTTPError):
+                raise e
+            else:
+                raise parameter_error(str(e))
         if value is not None:
             return value
 
@@ -74,7 +80,10 @@ class RecordFilter(RecordField):
             if model_filter is not None:
                 return model_filter
         except Exception as e:
-            raise parameter_error(str(e))
+            if isinstance(e, CustomHTTPError):
+                raise e
+            else:
+                raise parameter_error(str(e))
 
         return query.filter(getattr(RecordFieldFilter.model_class(query), self.field_name) == filter_value)
 

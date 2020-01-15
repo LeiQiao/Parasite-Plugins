@@ -132,7 +132,10 @@ class RecordAPI:
         self._request_headers = request_headers
 
         self._event_handler.execute_before_request_handler(self, self._request, self._request_headers)
-        self.handle()
+        try:
+            self.handle()
+        except Exception as e:
+            raise self._event_handler.execute_request_error_handler(self, self._request, e, self._request_headers)
         self._response = self._event_handler.execute_after_request_handler(self,
                                                                            self._request,
                                                                            self._response,
@@ -161,6 +164,9 @@ class RecordAPI:
 
     def add_after_request(self, func):
         self._event_handler.add_after_request_handler(func)
+
+    def add_request_error(self, func):
+        self._event_handler.add_request_error_handler(func)
 
     # decorate
     @staticmethod
