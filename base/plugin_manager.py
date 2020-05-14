@@ -16,6 +16,32 @@ class PluginManager:
         self.all_installed_plugins.append(base_plugin)
         self.load_plugins(base_plugin_path, extra_plugin_paths)
 
+    def execute(self):
+        if 'executable' not in pa.plugin_config['base']:
+            return
+
+        # 执行器
+        executers = pa.plugin_config['base']['executable'].split(',')
+        for executer_path in executers:
+            if len(executer_path.strip()) == 0:
+                continue
+
+            paths = executer_path.split('.')
+
+            executer = None
+            for path in paths:
+                if executer is None:
+                    executer = PluginManager.get_plugin(path)
+                else:
+                    if path in dir(executer):
+                        executer = getattr(executer, path)
+                    else:
+                        executer = None
+                if executer is None:
+                    raise ModuleNotFoundError('unable found executer \'{0}\''.format(executer_path))
+            executer()
+
+
     def load_plugins(self, base_plugin_path, extra_plugin_paths):
         plugin_path = os.path.realpath(os.path.join(base_plugin_path, '..'))
 

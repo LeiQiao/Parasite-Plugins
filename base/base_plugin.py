@@ -86,6 +86,7 @@ class BasePlugin(Plugin):
 
         # 将 base 加入到插件列表中并开始按顺序加载插件
         pa.plugin_manager.start(self, os.path.dirname(__file__), extra_plugins)
+        pa.plugin_manager.execute()
 
     # 获取模块所在 sys.modules 中的名称
     @staticmethod
