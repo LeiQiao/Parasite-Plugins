@@ -19,7 +19,7 @@ class BaseDBManagerPlugin(Plugin):
         BaseDBManagerPlugin.__createtable__ = dbc.create_table
         database_builder.build(dbc.database_engine, dbc.db_uri)
 
-    @Plugin.before_load
+    @Plugin.after_load
     def install_tables(self):
         # 获取模块的数据库表
         module_name = BasePlugin.get_module_name(self)
