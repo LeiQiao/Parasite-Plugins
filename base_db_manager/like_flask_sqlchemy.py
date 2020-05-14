@@ -5,8 +5,8 @@ from sqlalchemy.ext.declarative import declarative_base
 
 class SQLAlchemy:
     def __init__(self, db_uri):
-        self.database = create_engine(db_uri)
-        self.session = sessionmaker(bind=self.database)()
+        self.engine = create_engine(db_uri)
+        self.session = sessionmaker(bind=self.engine)()
         self.Model =declarative_base(
                 cls=Model,
                 name='Model',
