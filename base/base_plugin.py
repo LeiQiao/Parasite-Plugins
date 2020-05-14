@@ -24,11 +24,6 @@ class BasePlugin(Plugin):
 
     @staticmethod
     def start_log_service():
-        # 创建必须的log文件夹
-        check_sub_path_create('log')
-        # 日志文件路径
-        set_log_file(os.path.join(os.path.abspath('log'), 'server.log'),
-                     file_name_format='%project_name-%date-%log')
         pa.log = fishbase_logger
         # add stdout log output
         import logging
@@ -79,6 +74,15 @@ class BasePlugin(Plugin):
         sc = ServerConfig()
         pa.server_ip = sc.ip
         pa.server_port = sc.port
+
+        # 设置日志文件夹
+        log_path = 'log'
+        if 'log_path' in pa.plugin_config['base']:
+            log_path = pa.plugin_config['base']['log_path']
+        check_sub_path_create(log_path)
+        # 日志文件路径
+        set_log_file(os.path.join(os.path.abspath(log_path), 'server.log'),
+                     file_name_format='%project_name-%date-%log')
 
         # 加载插件
         if pa.plugin_manager is None:
