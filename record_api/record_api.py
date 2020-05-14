@@ -4,6 +4,7 @@ import pa
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from .i18n import *
 from sqlalchemy import exc
+from .model_decorator import ExtraColumn
 
 
 class RecordAPI:
@@ -36,7 +37,9 @@ class RecordAPI:
         if parameter_name not in self._request:
             return default_value
         value = self._request[parameter_name]
-        if len(value) == 0:
+        if isinstance(value, int):
+            return value
+        if value is None or len(value) == 0:
             return default_value
         return value
 
@@ -51,6 +54,9 @@ class RecordAPI:
             self._change_field_attribute_to_string(field)
             self._inputs.append(field)
 
+    def inputs(self):
+        return self._inputs
+
     def add_constrain(self, *args):
         for constrain_filter in args:
             if not isinstance(constrain_filter, RecordFilter):
@@ -58,15 +64,23 @@ class RecordAPI:
                                 .format(constrain_filter.__class__.__name__))
             self._constrains.append(constrain_filter)
 
+    def constrains(self):
+        return self._constrains
+
     def add_output(self, *args):
         for field in args:
             if isinstance(field, InstrumentedAttribute):
+                field = RecordField(field)
+            if isinstance(field, ExtraColumn):
                 field = RecordField(field)
             if not isinstance(field, RecordField) or isinstance(field, RecordFilter):
                 raise KeyError('output must be RecordField')
 
             self._change_field_attribute_to_string(field)
             self._outputs.append(field)
+
+    def outputs(self):
+        return self._outputs
 
     def regist(self):
         if self not in RecordAPI._all_record_api:
@@ -78,16 +92,26 @@ class RecordAPI:
                                 defaults={'record_api': self})
 
     def _change_field_attribute_to_string(self, field):
-        if not isinstance(field.field_name, InstrumentedAttribute):
-            return
-
-        if getattr(self._record_model, field.field_name.key, None) != field.field_name:
-            raise KeyError('model \'{0}\' not match the model of field \'{1}\''
-                           .format(self._record_model.__name__,
-                                   field.field_name))
-        field.field_name = field.field_name.key
-        if isinstance(field.parameter_name, InstrumentedAttribute):
-            field.parameter_name = field.field_name
+        if isinstance(field.field_name, InstrumentedAttribute):
+            if getattr(self._record_model, field.field_name.key, None) != field.field_name:
+                raise KeyError('model \'{0}\' not match the model of field \'{1}\''
+                               .format(self._record_model.__name__,
+                                       field.field_name))
+            field.field_name = field.field_name.key
+            if isinstance(field.parameter_name, InstrumentedAttribute):
+                field.parameter_name = field.field_name
+        elif isinstance(field.field_name, ExtraColumn):
+            if field.default is None:
+                field.default = field.field_name.default
+            field_name = None
+            for attr in dir(self._record_model):
+                attr_value = getattr(self._record_model, attr)
+                if isinstance(attr_value, ExtraColumn) and attr_value == field.field_name:
+                    field_name = attr
+                    break
+            field.field_name = field_name
+            if isinstance(field.parameter_name, ExtraColumn):
+                field.parameter_name = field.field_name
 
     @staticmethod
     def _api_handler(record_api):
@@ -159,6 +183,12 @@ class RecordAPI:
     def add_after_commit(self, func):
         self._event_handler.add_after_commit_handler(func)
 
+    def add_before_delete(self, func):
+        self._event_handler.add_before_delete_handler(func)
+
+    def add_after_delete(self, func):
+        self._event_handler.add_after_delete_handler(func)
+
     def add_before_request(self, func):
         self._event_handler.add_before_request_handler(func)
 
@@ -204,6 +234,18 @@ class RecordAPI:
         return decorated
 
     @staticmethod
+    def before_delete(route, method='GET'):
+        def decorated(func):
+            RecordAPI.get_record_api(route, method).add_before_delete(func)
+        return decorated
+
+    @staticmethod
+    def after_delete(route, method='GET'):
+        def decorated(func):
+            RecordAPI.get_record_api(route, method).add_after_delete(func)
+        return decorated
+
+    @staticmethod
     def before_request(route, method='GET'):
         def decorated(func):
             RecordAPI.get_record_api(route, method).add_before_request(func)
@@ -214,6 +256,46 @@ class RecordAPI:
         def decorated(func):
             RecordAPI.get_record_api(route, method).add_after_request(func)
         return decorated
+
+    # tools
+    def make_query(self):
+        return self._record_model.query
+
+    def trim_join_results(self, records):
+        rcds = []
+        for record in records:
+            rcds.append(self.get_model_record(record))
+        return rcds
+
+    def get_model_record(self, record):
+        if isinstance(record, tuple):
+            model_record = None
+            for rcd in record:
+                if rcd.__class__ == self._record_model:
+                    model_record = rcd
+                    break
+            if model_record is None:
+                if isinstance(self._record_model, pa.database.Model):
+                    return None
+                model_record = self._record_model()
+            # set ExtraColumn(ri.Column) values
+            for attr in dir(model_record):
+                attr_value = getattr(model_record, attr)
+                if not isinstance(attr_value, ExtraColumn):
+                    continue
+                record_attr = attr
+                record_default = attr_value.default
+                if attr_value.field_name is not None:
+                    record_attr = attr_value.field_name
+                if hasattr(record, record_attr):
+                    value = getattr(record, record_attr)
+                    setattr(model_record, attr, value)
+                else:
+                    if callable(record_default):
+                        record_default = record_default()
+                    setattr(model_record, attr, record_default)
+            return model_record
+        return record
 
 
 class RecordListAPI(RecordAPI):
@@ -234,7 +316,7 @@ class RecordListAPI(RecordAPI):
         self.total_count = total_count
 
     def handle(self):
-        query = self._record_model.query
+        query = self.make_query()
 
         for record_filter in self._inputs:
             if not isinstance(record_filter, RecordFilter):
@@ -249,17 +331,23 @@ class RecordListAPI(RecordAPI):
         query = self._event_handler.execute_before_query_handler(self, query)
 
         record_count_query = query
-        if self.page_number is not None and self.page_number.has_value(self._request) and \
-                self.page_size is not None and self.page_size.has_value(self._request):
+        if self.page_size is not None and self.page_size.has_value(self._request):
             try:
-                page_number = int(self.page_number.request_value(self._request))
                 page_size = int(self.page_size.request_value(self._request))
             except Exception as e:
-                pa.log.error('RecordAPIPlugin: unable convert page_number or page_size to integer: {0}'.format(e))
+                pa.log.error('RecordAPIPlugin: unable convert page_size to integer: {0}'.format(e))
                 raise parameter_error(i18n(PAGINATION_NOT_DIGIT_ERROR))
-            if page_number < 1:
-                raise parameter_error(i18n(PAGINATION_START_ERROR))
-            query = query.limit(page_size).offset((page_number-1)*page_size)
+            query = query.limit(page_size)
+
+            if self.page_number is not None and self.page_number.has_value(self._request):
+                try:
+                    page_number = int(self.page_number.request_value(self._request))
+                except Exception as e:
+                    pa.log.error('RecordAPIPlugin: unable convert page_number to integer: {0}'.format(e))
+                    raise parameter_error(i18n(PAGINATION_NOT_DIGIT_ERROR))
+                if page_number < 1:
+                    raise parameter_error(i18n(PAGINATION_START_ERROR).format(self.page_number.parameter_name))
+                query = query.offset((page_number-1)*page_size)
 
         try:
             all_records = query.all()
@@ -273,8 +361,12 @@ class RecordListAPI(RecordAPI):
         records_json = []
         for record in all_records:
             record_json = {}
+            model_record = self.get_model_record(record)
             for field in self._outputs:
-                record_json[field.parameter_name] = field.record_value(record)
+                if isinstance(field, JoinedRecordField):
+                    record_json[field.parameter_name] = field.record_value(record)
+                else:
+                    record_json[field.parameter_name] = field.record_value(model_record)
             records_json.append(record_json)
 
         self._response = {
@@ -302,7 +394,7 @@ class RecordGetAPI(RecordAPI):
         super(RecordGetAPI, self).__init__(model, route, method, json_data_form)
 
     def handle(self):
-        query = self._record_model.query
+        query = self.make_query()
 
         for record_filter in self._inputs:
             if not isinstance(record_filter, RecordFilter):
@@ -322,7 +414,12 @@ class RecordGetAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch record {0}'.format(e))
             raise fetch_database_error()
 
-        records = self._event_handler.execute_after_query_handler(self, [record])
+        records = []
+        if record is not None:
+            records.append(record)
+
+        records = self._event_handler.execute_after_query_handler(self, records)
+
         if len(records) > 0:
             record = records[0]
         else:
@@ -331,9 +428,15 @@ class RecordGetAPI(RecordAPI):
         if record is None:
             raise record_not_found_error()
 
+        model_record = self.get_model_record(record)
+
         record_json = {}
         for field in self._outputs:
-            record_json[field.parameter_name] = field.record_value(record)
+            if isinstance(field, JoinedRecordField):
+                record_json[field.parameter_name] = field.record_value(record)
+            else:
+                record_json[field.parameter_name] = field.record_value(model_record)
+
 
         self._response = record_json
 
@@ -384,7 +487,7 @@ class RecordAddAPI(RecordAPI):
         RecordFieldEditor.endflush(new_record)
         RecordFieldEditor.endadd(new_record)
 
-        self._event_handler.execute_after_commit_handler(self)
+        self._event_handler.execute_after_commit_handler(self, [new_record])
 
         record_json = {}
         for field in self._outputs:
@@ -410,7 +513,7 @@ class RecordEditAPI(RecordAPI):
         super(RecordEditAPI, self).__init__(model, route, method, json_data_form)
 
     def handle(self):
-        query = self._record_model.query
+        query = self.make_query()
 
         for record_field in self._inputs:
             if not isinstance(record_field, RecordFilter):
@@ -429,6 +532,8 @@ class RecordEditAPI(RecordAPI):
             raise fetch_database_error()
 
         records = self._event_handler.execute_after_query_handler(self, records)
+
+        records = self.trim_join_results(records)
 
         for record in records:
             for record_field in self._inputs:
@@ -454,7 +559,7 @@ class RecordEditAPI(RecordAPI):
         for record in records:
             RecordFieldEditor.endflush(record)
 
-        self._event_handler.execute_after_commit_handler(self)
+        self._event_handler.execute_after_commit_handler(self, records)
 
         records_json = []
         for record in records:
@@ -497,7 +602,7 @@ class RecordDeleteAPI(RecordAPI):
         super(RecordDeleteAPI, self).regist()
 
     def handle(self):
-        query = self._record_model.query
+        query = self.make_query()
 
         for record_field in self._inputs:
             query = record_field.filter_query(self._request, query, self._request_headers)
@@ -515,10 +620,19 @@ class RecordDeleteAPI(RecordAPI):
 
         records = self._event_handler.execute_after_query_handler(self, records)
 
+        records = self.trim_join_results(records)
+
         records = self._event_handler.execute_before_delete_handler(self, records)
 
         if len(records) == 0:
             raise record_not_found_error()
+
+        for i in range(len(records)):
+            if isinstance(records[i], tuple):
+                for rcd in records[i]:
+                    if rcd.__class__ == self._record_model:
+                        records[i] = rcd
+                        break
 
         for record in records:
             try:

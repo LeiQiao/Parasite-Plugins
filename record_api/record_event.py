@@ -101,9 +101,9 @@ class RecordEventHandler:
             records = handler(record_api, records, new_record)
         return records
 
-    def execute_after_commit_handler(self, record_api):
+    def execute_after_commit_handler(self, record_api, records):
         for handler in RecordEventHandler._global_after_commit_handlers + self._after_commit_handlers:
-            handler(record_api)
+            handler(record_api, records)
 
     def execute_before_delete_handler(self, record_api, records):
         for handler in RecordEventHandler._global_before_delete_handlers + self._before_delete_handlers:

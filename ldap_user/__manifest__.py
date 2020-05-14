@@ -5,7 +5,7 @@
     'description': '域账号用户管理，登录及查询用户信息',
     'author': '',
     'website': '',
-    'source': {'git': 'git@git.chinapnr.com:parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': '',
     'version': '0.1',

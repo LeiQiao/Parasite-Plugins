@@ -2,16 +2,18 @@ from .error_message import *
 from .model_decorator import RecordFieldEditor, RecordFieldExtend, RecordFieldFilter
 from datetime import datetime
 from .i18n import *
+from .model_decorator import ExtraColumn
 
 
 class RecordField:
-    def __init__(self, field_name, parameter_name=None, default=None, required=True):
+    def __init__(self, field_name, parameter_name=None, default=None, required=True, formatter=None):
         self.field_name = field_name
         if parameter_name is None:
             parameter_name = field_name
         self.parameter_name = parameter_name
         self.default = default
         self.required = required
+        self.formatter = formatter
 
     def has_value(self, request):
         if self.parameter_name in request:
@@ -24,7 +26,10 @@ class RecordField:
         if request is not None and self.parameter_name in request:
             return request[self.parameter_name]
         elif self.default is not None:
-            return self.default
+            if callable(self.default):
+                return self.default()
+            else:
+                return self.default
         else:
             return None
 
@@ -48,7 +53,10 @@ class RecordField:
             raise record_field_not_found_error(i18n(FIELD_NOT_EXIST_ERROR)
                                                .format(record.__class__.__name__, self.field_name))
 
-        setattr(record, self.field_name, value)
+        if self.formatter is not None and callable(self.formatter):
+            value = self.formatter(value)
+
+        setattr(record, self.field_name, self.format_value(value))
 
     def record_value(self, record):
         try:
@@ -59,12 +67,64 @@ class RecordField:
             else:
                 raise parameter_error(str(e))
         if value is not None:
-            return value
+            return self.format_value(value)
 
-        if hasattr(record, self.field_name):
-            value = getattr(record, self.field_name)
+        if isinstance(record, tuple):
+            for rcd in record:
+                if self.has_record_attr(rcd, self.field_name):
+                    value = self.get_attr_from_record(rcd, self.field_name)
+                    if value is not None:
+                        return self.format_value(value)
+                    else:
+                        return self.default
 
+        if self.has_record_attr(record, self.field_name):
+            value = self.format_value(self.get_attr_from_record(record, self.field_name))
+
+        if value is None:
+            if callable(self.default):
+                value = self.format_value(self.default())
+            else:
+                value = self.default
         return value
+
+    def format_value(self, value):
+        if self.formatter is None or not callable(self.formatter):
+            return value
+        return self.formatter(value)
+
+    @staticmethod
+    def has_record_attr(record, attr_name):
+        attrs = attr_name.split('.')
+        if len(attrs) == 0:
+            return hasattr(record, attr_name)
+
+        rcd = record
+        for attr in attrs:
+            if hasattr(rcd, attr):
+                rcd = getattr(rcd, attr)
+            else:
+                return False
+        return True
+
+    @staticmethod
+    def get_attr_from_record(record, attr_name):
+        attrs = attr_name.split('.')
+
+        rcd = record
+        for attr in attrs:
+            if hasattr(rcd, attr):
+                rcd = getattr(rcd, attr)
+            else:
+                return None
+
+        if isinstance(rcd, ExtraColumn):
+            return rcd.default
+        return rcd
+
+
+class JoinedRecordField(RecordField):
+    pass
 
 
 class RecordFilter(RecordField):
@@ -88,6 +148,40 @@ class RecordFilter(RecordField):
         return query.filter(getattr(RecordFieldFilter.model_class(query), self.field_name) == filter_value)
 
 
+class RecordCompareFilter(RecordFilter):
+    Equal = 1
+    Less = 2
+    EqualAndLess = 3
+    Great = 4
+    EqualAndGreat = 5
+
+    def __init__(self, field_name, parameter_name=None, default=None, required=True, compare_op=Equal):
+        super(RecordCompareFilter, self).__init__(field_name, parameter_name, default, required)
+        self.compare_op = compare_op
+
+    def filter_query(self, request, query, request_header=None):
+        filter_value = self.request_value(request)
+        if filter_value is None or (isinstance(filter_value, str) and len(filter_value) == 0):
+            if self.required:
+                raise parameter_error(i18n(PARAMETER_NOT_EXIST_ERROR).format(self.parameter_name))
+            return query
+
+        if isinstance(filter_value, str):
+            filter_value = filter_value.split(',')
+        q = getattr(RecordFieldFilter.model_class(query), self.field_name)
+        if self.compare_op == RecordCompareFilter.Equal:
+            q = (q == filter_value)
+        elif self.compare_op == RecordCompareFilter.Less:
+            q = (q < filter_value)
+        elif self.compare_op == RecordCompareFilter.EqualAndLess:
+            q = (q <= filter_value)
+        elif self.compare_op == RecordCompareFilter.Great:
+            q = (q > filter_value)
+        elif self.compare_op == RecordCompareFilter.EqualAndGreat:
+            q = (q >= filter_value)
+        return query.filter(q)
+
+
 class RecordInFilter(RecordFilter):
     def filter_query(self, request, query, request_header=None):
         filter_value = self.request_value(request)
@@ -97,6 +191,7 @@ class RecordInFilter(RecordFilter):
             return query
 
         filter_value = filter_value.split(',')
+        filter_value = [x for x in filter_value if x]
         return query.filter(getattr(RecordFieldFilter.model_class(query), self.field_name).in_(filter_value))
 
 

@@ -6,7 +6,7 @@
     'description': '',
     'author': '',
     'website': '',
-    'source': {'git': 'git@git.chinapnr.com:parasite/Parasite-Plugins.git', 'branch': 'master'},
+    'source': {'git': 'https://github.com/LeiQiao/Parasite-Plugins.git', 'branch': 'master'},
 
     'category': 'tools',
     'version': '0.1',

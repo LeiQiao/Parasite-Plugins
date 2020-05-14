@@ -1,3 +1,9 @@
+class ExtraColumn:
+    def __init__(self, field_name=None, default=None):
+        # 来源字段名称，从结果集中筛选字段时使用的名称
+        self.field_name = field_name
+        self.default = default
+
 # noinspection PyPep8Naming
 class ri:
     @staticmethod
@@ -96,6 +102,8 @@ class ri:
             RecordFieldEditor.add_end_delete(foreign_model.__name__, func)
             return func
         return decorated
+
+    Column = ExtraColumn
 
 
 class RecordFieldEditor:
@@ -219,7 +227,7 @@ class RecordFieldEditor:
                 if fname in record_wait_for_flush[record_field]:
                     flush_fields.append(record_wait_for_flush[record_field][fname])
                 else:
-                    flush_fields.append(getattr(record, fname))
+                    flush_fields.append(getattr(record, fname) if hasattr(record, fname) else None)
 
             # 调用当前记录的当前 onchange 事件，并将参数传递到 onchange 方法, 并删除当前 onchange 事件的缓存
             if flush_fields is not None:

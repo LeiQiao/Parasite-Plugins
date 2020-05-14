@@ -10,8 +10,8 @@ from datetime import datetime
 class SchedulePlugin(Plugin):
     __pluginname__ = 'base_schedule'
 
-    def __init__(self, plugin_name=None, manifest=None):
-        super(SchedulePlugin, self).__init__(plugin_name, manifest)
+    def __init__(self, plugin_name=None, manifest=None, plugin_path=None):
+        super(SchedulePlugin, self).__init__(plugin_name, manifest, plugin_path)
 
         self.schedule_jobs = {}
 
