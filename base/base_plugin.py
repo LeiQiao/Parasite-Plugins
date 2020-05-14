@@ -84,12 +84,8 @@ class BasePlugin(Plugin):
         if pa.plugin_manager is None:
             pa.plugin_manager = PluginManager()
 
-        # 将 base 加入到插件列表中
-        pa.plugin_manager.start(self, os.path.dirname(__file__))
-
-        # 调试插件
-        for extra_plugin in extra_plugins:
-                pa.plugin_manager.load_extra_plugin(extra_plugin.strip())
+        # 将 base 加入到插件列表中并开始按顺序加载插件
+        pa.plugin_manager.start(self, os.path.dirname(__file__), extra_plugins)
 
     # 获取模块所在 sys.modules 中的名称
     @staticmethod

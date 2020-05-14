@@ -9,45 +9,107 @@ import errno
 
 class PluginManager:
     all_installed_plugins = []
+    all_plugin_desc = []
 
-    def start(self, base_plugin, base_plugin_path):
+    def start(self, base_plugin, base_plugin_path, extra_plugin_paths):
         base_plugin.manifest = self._load_plugin_manifest(base_plugin_path)
         self.all_installed_plugins.append(base_plugin)
-        self.load_plugins()
+        self.load_plugins(base_plugin_path, extra_plugin_paths)
 
-    def load_extra_plugin(self, extra_plugin_path):
-        manifest = self._load_plugin_manifest(extra_plugin_path)
-        return self._load_plugin(manifest['name'], plugin_path=extra_plugin_path)
+    def load_plugins(self, base_plugin_path, extra_plugin_paths):
+        plugin_path = os.path.realpath(os.path.join(base_plugin_path, '..'))
 
-    def load_plugins(self):
-        # 遍历插件文件夹获取所有所有插件
-        plugin_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-        plugins_need_load = []
+        # 遍历插件文件夹获取所有插件
         for root, dirs, files in os.walk(plugin_path):
             if plugin_path != root:
                 continue
             for plugin_name in dirs:
-                # trim '__pacache__' etc.
-                if plugin_name.startswith('__'):
+                # trim '__pacache__', '.DB_Store' etc.
+                if plugin_name.startswith('__') or plugin_name.startswith('.'):
                     continue
-                plugins_need_load.append(plugin_name)
+                PluginManager.all_plugin_desc.append({
+                    'plugin_name': plugin_name,
+                    'manifest': PluginManager._load_plugin_manifest(os.path.join(plugin_path, plugin_name)),
+                    'plugin_path': None
+                })
 
+        # 遍历扩展文件夹获取所有外部插件
+        for extra_plugin_path in extra_plugin_paths:
+            extra_plugin_path = extra_plugin_path.strip()
+            manifest = self._load_plugin_manifest(extra_plugin_path)
+
+            exist_plugin = PluginManager.get_plugin_desc(manifest['name'])
+            if exist_plugin is not None and extra_plugin_path != exist_plugin['plugin_path']:
+                raise FileExistsError('duplicate plugin named \'{0}\''.format(manifest['name']))
+
+            PluginManager.all_plugin_desc.append({
+                'plugin_name': manifest['name'],
+                'manifest': manifest,
+                'plugin_path': extra_plugin_path
+            })
+
+        # 插件的加载顺序
         load_sequence = []
         if 'plugins' in pa.plugin_config['base']:
             load_sequence = pa.plugin_config['base']['plugins'].split(',')
-        for plugin_name in reversed(load_sequence):
-            plugin_name = plugin_name.strip()
-            if len(plugin_name) == 0:
-                continue
 
-            if plugin_name in plugins_need_load:
-                plugins_need_load.pop(plugins_need_load.index(plugin_name))
-                plugins_need_load.insert(0, plugin_name)
+        for plugin_name in load_sequence:
+            plugins = PluginManager.get_all_depend_plugins(plugin_name)
+            for plugin in plugins:
+                self._load_plugin(plugin['plugin_name'], plugin['manifest'], plugin['plugin_path'])
+
+    @staticmethod
+    def get_all_depend_plugins(plugin_name, plugin_version=None, depend_by=None):
+        sep_pos = plugin_name.find(':')
+        if sep_pos >= 0:
+            plugin_version = plugin_name[sep_pos+1:].strip()
+            plugin_name = plugin_name[:sep_pos].strip()
+        plugin = PluginManager.get_plugin_desc(plugin_name)
+        if plugin_version is not None and plugin_version != plugin['manifest']['version']:
+            raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
+                                      .format(plugin_name,
+                                              plugin_version,
+                                              plugin['manifest']['version']))
+
+        depend_plugins = []
+
+        # 加载模块的依赖模块
+        for depend_name in plugin['manifest']['depends']:
+            sep_pos = depend_name.find(':')
+            if sep_pos >= 0:
+                depend_version = depend_name[sep_pos+1:].strip()
+                depend_name = depend_name[:sep_pos].strip()
             else:
-                pa.log.warning('unable found plugin \'\' which is ordered in config file'.format(plugin_name))
+                depend_version = None
+                depend_name = depend_name.strip()
 
-        for plugin_name in plugins_need_load:
-            self._load_plugin(plugin_name)
+            if depend_by is None:
+                depend_by = []
+            else:
+                # 循环依赖
+                if plugin_name in depend_by:
+                    raise RecursionError('recursive dependency: {0} -> {1}({2})'
+                                         .format(' -> '.join(depend_by),
+                                                 plugin_name,
+                                                 'any' if plugin_version is None else plugin_version))
+            new_depend_by = depend_by[:]
+            new_depend_by.append(plugin_name)
+            depend_depend_plugins = PluginManager.get_all_depend_plugins(depend_name, depend_version, new_depend_by)
+            for depend_depend_plugin in depend_depend_plugins:
+                if depend_depend_plugin in depend_plugins:
+                    continue
+                depend_plugins.append(depend_depend_plugin)
+        depend_plugins.append(plugin)
+        return depend_plugins
+
+
+
+    @staticmethod
+    def get_plugin_desc(plugin_name):
+        for plugin_desc in PluginManager.all_plugin_desc:
+            if plugin_desc['plugin_name'] == plugin_name:
+                return plugin_desc
+        return None
 
     @staticmethod
     def get_plugin(plugin_name):
@@ -69,17 +131,12 @@ class PluginManager:
                            .format(os.path.basename(plugin_path)))
             return None
 
-    def _load_plugin(self, plugin_name, plugin_version=None, plugin_path=None, depend_by=None):
+    def _load_plugin(self, plugin_name, manifest, plugin_path=None):
         if len(plugin_name) == 0:
             return
 
         installed_plugin = self.get_plugin(plugin_name)
         if installed_plugin is not None:
-            if plugin_version is not None and installed_plugin.manifest['version'] != plugin_version:
-                raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
-                                          .format(plugin_name,
-                                                  plugin_version,
-                                                  installed_plugin.manifest['version']))
             return None
 
         if plugin_path is None:
@@ -96,40 +153,9 @@ class PluginManager:
             raise FileNotFoundError(errno.ENOENT,
                                     os.strerror(errno.ENOENT),
                                     os.path.join(plugin_path, '__init__.py'))
-        manifest = self._load_plugin_manifest(plugin_path)
         if manifest is None:
-            raise ModuleNotFoundError('plugin \'{0} ({1})\' was not found \'__manifest__.py\' file'
-                                      .format(plugin_name,
-                                              'any' if plugin_version is None else plugin_version))
-
-        if plugin_version is not None and plugin_version.lower() != manifest['version'].lower():
-            raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
-                                      .format(plugin_name,
-                                              plugin_version,
-                                              manifest['version']))
-
-        # 加载模块的依赖模块
-        for depend_name in manifest['depends']:
-            sep_pos = depend_name.find(':')
-            if sep_pos >= 0:
-                depend_version = depend_name[sep_pos+1:].strip()
-                depend_name = depend_name[:sep_pos].strip()
-            else:
-                depend_version = None
-                depend_name = depend_name.strip()
-
-            if depend_by is None:
-                depend_by = []
-            else:
-                # 循环依赖
-                if plugin_name in depend_by:
-                    raise RecursionError('recursive dependency: {0} -> {1}({2})'
-                                         .format(' -> '.join(depend_by),
-                                                 plugin_name,
-                                                 'any' if plugin_version is None else plugin_version))
-            new_depend_by = depend_by[:]
-            new_depend_by.append(plugin_name)
-            self._load_plugin(depend_name, depend_version, None, new_depend_by)
+            raise ModuleNotFoundError('plugin \'{0}\' do NOT have \'__manifest__.py\' file'
+                                      .format(plugin_name))
 
         # 加载模块
         plugin = importlib.import_module(plugin_module)
@@ -153,8 +179,7 @@ class PluginManager:
                 plugin_class = attribute_value
         if plugin_class is None:
             raise ModuleNotFoundError('plugin \'{0} ({1})\' has not found enterance'
-                                      .format(manifest['name'],
-                                              'any' if plugin_version is None else plugin_version))
+                                      .format(manifest['name'], manifest['version']))
 
         plugin = plugin_class(plugin_name=plugin_name, manifest=manifest, plugin_path=plugin_path)
 
