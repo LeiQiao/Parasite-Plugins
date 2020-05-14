@@ -5,6 +5,7 @@ from sqlalchemy import inspect, func
 from sqlalchemy.orm.properties import ColumnProperty
 import pa
 from .db_config import DBConfig
+from . import database_builder
 
 
 class BaseDBManagerPlugin(Plugin):
@@ -16,15 +17,7 @@ class BaseDBManagerPlugin(Plugin):
     def on_load(self):
         dbc = DBConfig()
         BaseDBManagerPlugin.__createtable__ = dbc.create_table
-        BaseDBManagerPlugin.load_database(dbc.db_uri)
-
-    @staticmethod
-    def load_database(db_uri):
-        pa.web_app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
-        pa.web_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        # pa.web_app.config["SQLALCHEMY_ECHO"] = True
-        pa.database.app = pa.web_app
-        pa.database.init_app(pa.web_app)
+        database_builder.build(dbc.database_engine, dbc.db_uri)
 
     @Plugin.before_load
     def install_tables(self):
