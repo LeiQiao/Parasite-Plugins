@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, ForeignKey, create_engine
+from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, ForeignKey, create_engine, relationship
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -21,6 +21,7 @@ class SQLAlchemy:
         self.SmallInteger = SmallInteger
         self.BigInteger = BigInteger
         self.ForeignKey = ForeignKey
+        self.relationship = relationship
 
 class Model:
     query = None
