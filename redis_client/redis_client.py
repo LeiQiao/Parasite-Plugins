@@ -73,3 +73,25 @@ class RedisClient(object):
             return None
         json_value = json.loads(json_str)
         return json_value
+
+    def subscribe(self, channel_name):
+        """
+        redis订阅某个channel
+        :param channel_name: 频道名称
+        """
+        try:
+            pub = self._connection.pubsub()
+            pub.subscribe(channel_name)
+        except Exception as _:
+            return None
+
+        return pub
+
+    def redis_publish(self, channel_name, msg):
+        """
+        redis在channel_name中发布消息msg
+        :param channel_name: 频道名称
+        :param msg: 消息
+        """
+        self._connection.publish(channel_name, msg)
+        return True
