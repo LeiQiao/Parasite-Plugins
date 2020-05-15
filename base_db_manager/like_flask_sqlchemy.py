@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, ForeignKey, create_engine
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -22,6 +22,7 @@ class SQLAlchemy:
         self.BigInteger = BigInteger
         self.ForeignKey = ForeignKey
         self.relationship = relationship
+        self.backref = backref
 
 class Model:
     query = None
