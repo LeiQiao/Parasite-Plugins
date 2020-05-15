@@ -87,7 +87,7 @@ class RedisClient(object):
 
         return pub
 
-    def redis_publish(self, channel_name, msg):
+    def publish(self, channel_name, msg):
         """
         redis在channel_name中发布消息msg
         :param channel_name: 频道名称
