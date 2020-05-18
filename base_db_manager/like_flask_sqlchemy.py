@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 class SQLAlchemy:
     def __init__(self, db_uri):
-        self.engine = create_engine(db_uri, isolation_level='READ COMMITTED', pool_recycle=3600)
+        self.engine = create_engine(db_uri, pool_recycle=3600)
         self.session_factory = sessionmaker(bind=self.engine)
         self.session = scoped_session(self.session_factory)
         self.Model =declarative_base(
@@ -26,9 +26,8 @@ class SQLAlchemy:
 
 
 class BaseQuery(Query):
-    pass
     def __del__(self):
-        self.session.close()
+        self.session.remove()
 
 
 class Model:
