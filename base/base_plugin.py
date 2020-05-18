@@ -25,12 +25,12 @@ class BasePlugin(Plugin):
     @staticmethod
     def start_log_service():
         pa.log = fishbase_logger
-        def log_with_exception(obj, message, exception=None):
-            if exception is None:
-                obj.origin_error(message)
-            else:
-                obj.origin_error('{0}\n{1}'.format(message, traceback.format_exc()))
         pa.log.origin_error = pa.log.error
+        def log_with_exception(message, exception=None):
+            if exception is None:
+                pa.log.origin_error(message)
+            else:
+                pa.log.origin_error('{0}\n{1}'.format(message, traceback.format_exc()))
         pa.log.error = log_with_exception
 
         # add stdout log output
