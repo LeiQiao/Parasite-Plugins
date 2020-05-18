@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, ForeignKey, create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref, Query
+from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref, Query, class_mapper
 from sqlalchemy.ext.declarative import declarative_base
 
 
@@ -13,7 +13,6 @@ class SQLAlchemy:
                 name='Model',
                 metadata=None
             )
-        self.Model.query_class = self.session
         self.Model.query = _QueryProperty(self)
         self.Column = Column
         self.String = String
@@ -25,13 +24,23 @@ class SQLAlchemy:
         self.relationship = relationship
         self.backref = backref
 
+
+class BaseQuery(Query):
+    pass
+    def __del__(self):
+        self.session.close()
+
+
 class Model:
     query = None
-    query_class = None
+    query_class = BaseQuery
+
 
 class _QueryProperty:
     def __init__(self, sa):
         self.sa = sa
 
     def __get__(self, obj, class_type):
-        return class_type.query_class().query(class_type)
+        mapper = class_mapper(class_type)
+        return class_type.query_class(mapper, session=self.sa.session())
+        # return class_type.query_class().query(class_type)
