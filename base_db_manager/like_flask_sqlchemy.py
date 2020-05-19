@@ -27,7 +27,7 @@ class SQLAlchemy:
 
 class BaseQuery(Query):
     def __del__(self):
-        self.session.remove()
+        self.session.close()
 
 
 class Model:
