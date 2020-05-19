@@ -154,6 +154,7 @@ class RecordCompareFilter(RecordFilter):
     EqualAndLess = 3
     Great = 4
     EqualAndGreat = 5
+    NotEqual = 6
 
     def __init__(self, field_name, parameter_name=None, default=None, required=True, compare_op=Equal):
         super(RecordCompareFilter, self).__init__(field_name, parameter_name, default, required)
@@ -171,6 +172,8 @@ class RecordCompareFilter(RecordFilter):
         q = getattr(RecordFieldFilter.model_class(query), self.field_name)
         if self.compare_op == RecordCompareFilter.Equal:
             q = (q == filter_value)
+        elif self.compare_op == RecordCompareFilter.NotEqual:
+            q = (q != filter_value)
         elif self.compare_op == RecordCompareFilter.Less:
             q = (q < filter_value)
         elif self.compare_op == RecordCompareFilter.EqualAndLess:

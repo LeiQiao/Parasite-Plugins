@@ -51,11 +51,11 @@ def handle_http_error(error):
         else:
             message = str(error.response_code)
         
-        pa.log.error('%s %s %s \"%s\"',
+        pa.log.error('{0} {1} {2} \"{3}\"'.format(
                      http_request.method,
                      http_request.path,
                      status_code,
-                     message)
+                     message))
 
     return response, status_code
 

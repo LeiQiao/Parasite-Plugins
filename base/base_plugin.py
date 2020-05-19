@@ -8,6 +8,7 @@ from fishbase.fish_file import check_sub_path_create
 from fishbase.fish_logger import logger as fishbase_logger, set_log_file
 from .plugin_manager import PluginManager
 from .server_config import ServerConfig
+import traceback
 
 
 class BasePlugin(Plugin):
