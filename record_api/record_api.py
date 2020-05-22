@@ -39,7 +39,7 @@ class RecordAPI:
         value = self._request[parameter_name]
         if isinstance(value, int):
             return value
-        if value is None or len(value) == 0:
+        if value is None:
             return default_value
         return value
 
