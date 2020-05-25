@@ -33,13 +33,15 @@ class RecordAPI:
     def get_model(self):
         return self._record_model
 
-    def get_parameter(self, parameter_name, default_value=None):
+    def get_parameter(self, parameter_name, default_value=None, accept_empty=True):
         if parameter_name not in self._request:
             return default_value
         value = self._request[parameter_name]
         if isinstance(value, int):
             return value
         if value is None:
+            return default_value
+        if not accept_empty and value == '':
             return default_value
         return value
 
