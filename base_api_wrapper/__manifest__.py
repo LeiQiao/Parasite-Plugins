@@ -12,5 +12,5 @@
     'version': '0.1',
 
     # any plugin necessary for this one to work correctly
-    'depends': ['base']
+    'depends': ['base', 'flask_server']
 }
