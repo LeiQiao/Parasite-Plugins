@@ -80,6 +80,7 @@ class PluginManager:
             load_sequence = pa.plugin_config['base']['plugins'].split(',')
 
         for plugin_name in load_sequence:
+            plugin_name = plugin_name.strip()
             plugins = PluginManager.get_all_depend_plugins(plugin_name)
             for plugin in plugins:
                 self._load_plugin(plugin['plugin_name'], plugin['manifest'], plugin['plugin_path'])
