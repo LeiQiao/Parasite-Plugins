@@ -15,6 +15,7 @@ def install_plugin():
     branch = request.form.get('branch')
     path = request.form.get('path')
     zip_file = request.files['files'] if 'files' in request.files else None
+    force_replacement = request.form.get('force_replace', '')
 
     if git_url is not None and len(git_url) > 0:
         if branch is None or len(branch) == 0:
@@ -28,7 +29,10 @@ def install_plugin():
             try:
                 import git
                 git.Repo.clone_from(url=git_url, to_path=temp_path, branch=branch)
-                _install_plugins([os.path.join(temp_path, path)])
+                if force_replacement == '1':
+                    replace_dir([os.path.join(temp_path, path)])
+                else:
+                    _install_plugins([os.path.join(temp_path, path)])
             except Exception as e:
                 pa.log.error('install plugin error: {0}'.format(e))
                 return 'install plugin error: {0}'.format(e), 400
@@ -36,7 +40,10 @@ def install_plugin():
         with tempfile.TemporaryDirectory() as temp_path:
             plugin_paths = _unzip_to_path(zip_file, temp_path)
             try:
-                _install_plugins(plugin_paths)
+                if force_replacement == '1':
+                    replace_dir(plugin_paths)
+                else:
+                    _install_plugins(plugin_paths)
             except Exception as e:
                 pa.log.error('install plugin error: {0}'.format(e))
                 return 'install plugin error: {0}'.format(e), 400
@@ -66,6 +73,18 @@ def _unzip_to_path(zip_file, temp_path):
                 continue
             plugin_paths.append(os.path.join(temp_path, plugin_name))
     return plugin_paths
+
+
+def replace_dir(plugin_paths):
+    pa_plugin_path = os.path.dirname(sys.modules['plugins'].__file__)
+    pa.log.info(pa_plugin_path)
+    for plugin_path in plugin_paths:
+        # 设置插件的路径
+        pa.log.info(plugin_path)
+        plugin_path_name = os.path.basename(plugin_path)
+        pa.log.info(plugin_path_name)
+        dest_depend_path = os.path.join(pa_plugin_path, plugin_path_name)
+        pa.log.info(dest_depend_path)
 
 
 def _install_plugins(plugin_paths):
