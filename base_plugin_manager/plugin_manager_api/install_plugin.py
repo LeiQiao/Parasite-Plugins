@@ -80,11 +80,9 @@ def replace_dir(plugin_paths):
     pa.log.info(pa_plugin_path)
     for plugin_path in plugin_paths:
         # 设置插件的路径
-        pa.log.info(plugin_path)
         plugin_path_name = os.path.basename(plugin_path)
-        pa.log.info(plugin_path_name)
         dest_depend_path = os.path.join(pa_plugin_path, plugin_path_name)
-        pa.log.info(dest_depend_path)
+        shutil.copytree(plugin_path, idest_depend_path)
 
 
 def _install_plugins(plugin_paths):
