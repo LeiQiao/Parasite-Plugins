@@ -82,7 +82,8 @@ def replace_dir(plugin_paths):
         # 设置插件的路径
         plugin_path_name = os.path.basename(plugin_path)
         dest_depend_path = os.path.join(pa_plugin_path, plugin_path_name)
-        shutil.copytree(plugin_path, idest_depend_path)
+        shutil.rmtree(dest_depend_path)
+        shutil.copytree(plugin_path, dest_depend_path)
 
 
 def _install_plugins(plugin_paths):
