@@ -124,7 +124,12 @@ class RecordField:
 
 
 class JoinedRecordField(RecordField):
-    pass
+    def __init__(self, field_name, parameter_name=None, default=None, required=True, formatter=None):
+        # 默认为分段的最后一个参数，例如获取设备 ID，field_name 为 Device.id 则默认的 parameter_name 为 id
+        if parameter_name is None:
+            parameter_name = field_name.split('.')[-1]
+
+        super(JoinedRecordField, self).__init__(field_name, parameter_name, default, required, formatter)
 
 
 class RecordFilter(RecordField):
