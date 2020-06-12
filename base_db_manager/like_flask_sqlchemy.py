@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, Numeric, ForeignKey, create_engine
+from sqlalchemy import Column, String, Integer, SmallInteger, BigInteger, DateTime, Numeric, ForeignKey, create_engine, JSON
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship, backref, Query, class_mapper
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -39,6 +39,7 @@ class SQLAlchemy:
         self.Numeric = Numeric
         self.relationship = relationship
         self.backref = backref
+        self.JSON = JSON
 
 
 class BaseQuery(Query):
