@@ -120,6 +120,8 @@ class RecordAPI:
         return record_api.handle_http_request()
 
     def handle_http_request(self):
+        pa.log.info('请求: %s', self._route)
+
         if self._json_data_form:
             try:
                 request = http_request.json
