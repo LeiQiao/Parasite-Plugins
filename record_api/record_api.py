@@ -283,8 +283,9 @@ class RecordAPI:
                     return None
                 model_record = self._record_model()
             # set ExtraColumn(ri.Column) values
-            for attr in dir(model_record):
-                attr_value = getattr(model_record, attr)
+            model_class = model_record.__class__
+            for attr in dir(model_class):
+                attr_value = getattr(model_class, attr)
                 if not isinstance(attr_value, ExtraColumn):
                     continue
                 record_attr = attr
