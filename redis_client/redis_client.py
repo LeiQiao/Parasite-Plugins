@@ -13,7 +13,7 @@ class RedisClient(object):
             auth = config.redis_auth
             db = config.redis_db
         # 初始化redis链接
-        if auth is None or auth.strip() is '':
+        if auth is None or len(auth.strip()) == 0:
             auth = None
         self._connection = redis.StrictRedis(connection_pool=self.create_pool(host, port, max_connections, db, auth))
 
