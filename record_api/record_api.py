@@ -288,6 +288,10 @@ class RecordAPI:
                 attr_value = getattr(model_class, attr)
                 if not isinstance(attr_value, ExtraColumn):
                     continue
+                # ignored if object's ExtraColumn is already set by outside
+                obj_attr_value = getattr(model_record, attr)
+                if not isinstance(obj_attr_value, ExtraColumn):
+                    continue
                 record_attr = attr
                 record_default = attr_value.default
                 if attr_value.field_name is not None:
