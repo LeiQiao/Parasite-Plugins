@@ -45,6 +45,16 @@ class RecordAPI:
             return default_value
         return value
 
+    @staticmethod
+    def get_request_file(file_name):
+        if file_name is None:
+            return http_request.files
+
+        if file_name in http_request.files:
+            return http_request.files[file_name]
+        else:
+            return None
+
     def add_input(self, *args):
         for field in args:
             if isinstance(field, InstrumentedAttribute):
