@@ -112,3 +112,7 @@ def parameter_error(error_message='参数错误'):
 
 def authorization_error(error_message='UNAUTHORIZAED'):
     return HTTPAuthorizationError(CustomResponseCode(90101, error_message))
+
+
+def authorization_level_error(error_message='UNAUTHORIZAED'):
+    return HTTPAuthorizationError(CustomResponseCode(90102, error_message))
