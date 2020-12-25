@@ -130,7 +130,7 @@ class RecordAPI:
         return record_api.handle_http_request()
 
     def handle_http_request(self):
-        pa.log.info('请求: %s', self._route)
+        pa.log.info('请求: %s %s', self._method, self._route)
 
         if self._json_data_form:
             try:
