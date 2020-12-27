@@ -5,6 +5,9 @@ from sqlalchemy.orm.attributes import InstrumentedAttribute
 from .i18n import *
 from sqlalchemy import exc
 from .model_decorator import ExtraColumn
+from redis_client import RedisClient
+import time
+import json
 
 
 class RecordAPI:
@@ -155,7 +158,33 @@ class RecordAPI:
             pa.log.error(e)
             pass
 
-        response = self.handle_request(request, request_headers)
+        response = None
+        # 防止同时时间发送多次相同请求
+        ts = str(request.get('ts', ''))
+        redis = RedisClient()
+        response_key = '{0}-{1}'.format(self._route.replace('/', '-'), ts)
+        nx_key = '{0}-lock'.format(response_key)
+        if ts is not None and ts != '':
+            retry_times = 0
+            while True:
+                setnx_result = redis.set_data(nx_key, '', 5, True)
+                if setnx_result is not True:
+                    retry_times += 1
+                    if retry_times >= 5:
+                        raise parameter_error(DUPLICATE_API_REQUEST_ERROR)
+                    time.sleep(1)
+                else:
+                    break
+            response = redis.get_json(response_key)
+
+        # 将请求结果保存到 redis 中，相同请求接口可以返回相同的数据
+        if response is None:
+            response = self.handle_request(request, request_headers)
+            try:
+                redis.set_data(response_key, json.dumps(response), 5)
+            except Exception as e:
+                str(e)
+        redis.del_data(nx_key)
 
         try:
             pa.log.info('返回报文: %s', str(response))
