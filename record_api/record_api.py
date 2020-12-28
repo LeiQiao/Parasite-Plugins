@@ -8,6 +8,7 @@ from .model_decorator import ExtraColumn
 from redis_client import RedisClient
 import time
 import json
+import re
 
 
 class RecordAPI:
@@ -26,6 +27,8 @@ class RecordAPI:
         self._json_data_form = json_data_form
 
         self._event_handler = RecordEventHandler()
+
+        self._unique_inputs = []
 
     def get_route(self):
         return self._route
@@ -97,6 +100,14 @@ class RecordAPI:
     def outputs(self):
         return self._outputs
 
+    def add_unique_input(self, *args):
+        for parameter_name in args:
+            if parameter_name not in self._unique_inputs:
+                self._unique_inputs.append(parameter_name)
+
+    def unique_inputs(self):
+        return self._unique_inputs
+
     def regist(self):
         if self not in RecordAPI._all_record_api:
             RecordAPI._all_record_api.append(self)
@@ -160,31 +171,64 @@ class RecordAPI:
 
         response = None
         # 防止同时时间发送多次相同请求
-        ts = str(request.get('ts', ''))
+        unique_key = []
+        for ui in self._unique_inputs:
+            value = request.get(ui, '')
+            if value:
+                value = re.sub('[^a-zA-Z0-9]', '_', value)
+                unique_key.append('{0}'.format(value))
+        unique_key = '-'.join(unique_key)
         redis = RedisClient()
-        response_key = '{0}-{1}'.format(self._route.replace('/', '-'), ts)
-        nx_key = '{0}-lock'.format(response_key)
-        if ts is not None and ts != '':
+        nx_key = '{0}-lock'.format(unique_key)
+        if unique_key is not None and unique_key != '':
             retry_times = 0
             while True:
                 setnx_result = redis.set_data(nx_key, '', 5, True)
                 if setnx_result is not True:
+                    pa.log.info('duplicated request occur {0}, wait for last request complete (times: {1})'.format(
+                        self._route, retry_times+1
+                    ))
                     retry_times += 1
                     if retry_times >= 5:
-                        raise parameter_error(DUPLICATE_API_REQUEST_ERROR)
+                        raise parameter_error(i18n(DUPLICATE_API_REQUEST_ERROR))
                     time.sleep(1)
                 else:
                     break
-            response = redis.get_json(response_key)
+            response = redis.get_json(unique_key)
 
         # 将请求结果保存到 redis 中，相同请求接口可以返回相同的数据
+        response_error = None
         if response is None:
-            response = self.handle_request(request, request_headers)
             try:
-                redis.set_data(response_key, json.dumps(response), 5)
+                response = self.handle_request(request, request_headers)
+            except Exception as e:
+                response_error = e
+            try:
+                # 如果请求出现异常则从 redis 中删除请求结果
+                if response_error is None:
+                    redis.set_data(unique_key, json.dumps(response), 5)
+                else:
+                    redis.del_data(unique_key)
             except Exception as e:
                 str(e)
-        redis.del_data(nx_key)
+        else:
+            try:
+                pa.log.info('duplicated request {0} get same response from last request: {1}'.format(
+                    self._route, json.dumps(response)
+                ))
+            except Exception as e:
+                str(e)
+                pa.log.info('duplicated request {0} get same response from last request'
+                            '(response unable serialized)'.format(
+                    self._route
+                ))
+
+        if response_error is not None:
+            raise response_error
+        else:
+            # 只有请求成功的重复请求才可以返回相同结果，否则不删除同步锁，让其它重复请求超时并返回重复操作提醒
+            # 友好的方式是将请求异常也保存到 redis 让其它重复请求直接从 redis 获取错误信息并返回
+            redis.del_data(nx_key)
 
         try:
             pa.log.info('返回报文: %s', str(response))
