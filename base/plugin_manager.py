@@ -79,6 +79,9 @@ class PluginManager:
         if 'plugins' in pa.plugin_config['base']:
             load_sequence = pa.plugin_config['base']['plugins'].split(',')
 
+        if len(load_sequence) == 1 and len(load_sequence[0]) == 0:
+            pa.log.warning('config.conf: plugins in [base] section is empty, is this correct ?')
+
         for plugin_name in load_sequence:
             plugin_name = plugin_name.strip()
             plugins = PluginManager.get_all_depend_plugins(plugin_name)
@@ -92,6 +95,8 @@ class PluginManager:
             plugin_version = plugin_name[sep_pos+1:].strip()
             plugin_name = plugin_name[:sep_pos].strip()
         plugin = PluginManager.get_plugin_desc(plugin_name)
+        if plugin is None:
+            raise FileNotFoundError('plugin not found: {0}'.format(plugin_name))
         if plugin_version is not None and plugin_version != plugin['manifest']['version']:
             raise ModuleNotFoundError('plugin \'{0}\' version is not match (need: {1} found: {2})'
                                       .format(plugin_name,
