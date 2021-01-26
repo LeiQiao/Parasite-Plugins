@@ -171,16 +171,19 @@ class RecordAPI:
 
         response = None
         # 防止同时时间发送多次相同请求
-        unique_key = []
+        unique_key_arr = [
+            re.sub('/', '_', self._route),
+            self._method
+        ]
         for ui in self._unique_inputs:
             value = request.get(ui, '')
             if value:
                 value = re.sub('[^a-zA-Z0-9]', '_', value)
-                unique_key.append('{0}'.format(value))
-        unique_key = '-'.join(unique_key)
+                unique_key_arr.append('{0}'.format(value))
+        unique_key = '-'.join(unique_key_arr)
         redis = RedisClient()
         nx_key = '{0}-lock'.format(unique_key)
-        if unique_key is not None and unique_key != '':
+        if len(self._unique_inputs) > 0:
             retry_times = 0
             while True:
                 setnx_result = redis.set_data(nx_key, '', 5, True)
