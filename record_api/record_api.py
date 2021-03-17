@@ -481,6 +481,15 @@ class RecordListAPI(RecordAPI):
 
         return decorated
 
+    @staticmethod
+    def handle_route(model, route, method=None, json_data_form=False):
+        def decorated(func):
+            api = RecordListAPI(model, route, method, json_data_form)
+            api.handle = func
+            api.regist()
+
+        return decorated
+
 
 class RecordGetAPI(RecordAPI):
     def __init__(self, model, route, method=None, json_data_form=False):
@@ -545,6 +554,15 @@ class RecordGetAPI(RecordAPI):
 
         return decorated
 
+    @staticmethod
+    def handle_route(model, route, method=None, json_data_form=False):
+        def decorated(func):
+            api = RecordGetAPI(model, route, method, json_data_form)
+            api.handle = func
+            api.regist()
+
+        return decorated
+
 
 class RecordAddAPI(RecordAPI):
     def __init__(self, model, route, method=None, json_data_form=False):
@@ -596,6 +614,15 @@ class RecordAddAPI(RecordAPI):
         def decorated(func):
             api = RecordAddAPI(model, route, method, json_data_form)
             func(api)
+            api.regist()
+
+        return decorated
+
+    @staticmethod
+    def handle_route(model, route, method=None, json_data_form=False):
+        def decorated(func):
+            api = RecordAddAPI(model, route, method, json_data_form)
+            api.handle = func
             api.regist()
 
         return decorated
@@ -674,6 +701,15 @@ class RecordEditAPI(RecordAPI):
         def decorated(func):
             api = RecordEditAPI(model, route, method, json_data_form)
             func(api)
+            api.regist()
+
+        return decorated
+
+    @staticmethod
+    def handle_route(model, route, method=None, json_data_form=False):
+        def decorated(func):
+            api = RecordEditAPI(model, route, method, json_data_form)
+            api.handle = func
             api.regist()
 
         return decorated
@@ -760,6 +796,15 @@ class RecordDeleteAPI(RecordAPI):
         def decorated(func):
             api = RecordDeleteAPI(model, route, method, json_data_form)
             func(api)
+            api.regist()
+
+        return decorated
+
+    @staticmethod
+    def handle_route(model, route, method=None, json_data_form=False):
+        def decorated(func):
+            api = RecordDeleteAPI(model, route, method, json_data_form)
+            api.handle = func
             api.regist()
 
         return decorated
