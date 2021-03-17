@@ -1,6 +1,6 @@
 from pa.plugin import Plugin
 import pa
-from flask import Flask
+from flask import Flask, session
 
 
 class FlaskServer(Plugin):
@@ -10,4 +10,5 @@ class FlaskServer(Plugin):
         pa.web_app = Flask(__name__)
 
     def run_server(self):
+        pa.session = session
         pa.web_app.run(host=pa.server_ip, port=int(pa.server_port), threaded=True)
