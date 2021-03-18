@@ -128,7 +128,8 @@ class RecordEventHandler:
             error = self.call_handler(handler, record_api, request, error, request_headers)
         return error
 
-    def call_handler(self, handler, record_api, *args):
+    @staticmethod
+    def call_handler(handler, record_api, *args):
         if hasattr(handler, '__self__') and handler.__self__ == record_api:
             return handler(*args)
         else:
