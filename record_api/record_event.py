@@ -88,45 +88,51 @@ class RecordEventHandler:
     # execute op handler
     def execute_before_query_handler(self, record_api, query):
         for handler in RecordEventHandler._global_before_query_handlers + self._before_query_handlers:
-            query = handler(record_api, query)
+            query = self.call_handler(handler, record_api, query)
         return query
 
     def execute_after_query_handler(self, record_api, records):
         for handler in RecordEventHandler._global_after_query_handlers + self._after_query_handlers:
-            records = handler(record_api, records)
+            records = self.call_handler(handler, record_api, records)
         return records
 
     def execute_before_commit_handler(self, record_api, records, new_record):
         for handler in RecordEventHandler._global_before_commit_handlers + self._before_commit_handlers:
-            records = handler(record_api, records, new_record)
+            records = self.call_handler(handler, record_api, records, new_record)
         return records
 
     def execute_after_commit_handler(self, record_api, records):
         for handler in RecordEventHandler._global_after_commit_handlers + self._after_commit_handlers:
-            handler(record_api, records)
+            self.call_handler(handler, record_api, records)
 
     def execute_before_delete_handler(self, record_api, records):
         for handler in RecordEventHandler._global_before_delete_handlers + self._before_delete_handlers:
-            records = handler(record_api, records)
+            records = self.call_handler(handler, record_api, records)
         return records
 
     def execute_after_delete_handler(self, record_api):
         for handler in RecordEventHandler._global_after_delete_handlers + self._after_delete_handlers:
-            handler(record_api)
+            self.call_handler(handler, record_api)
 
     def execute_before_request_handler(self, record_api, request, request_headers):
         for handler in RecordEventHandler._global_before_request_handlers + self._before_request_handlers:
-            handler(record_api, request, request_headers)
+            self.call_handler(handler, record_api, request, request_headers)
 
     def execute_after_request_handler(self, record_api, request, response, request_headers):
         for handler in RecordEventHandler._global_after_request_handlers + self._after_request_handlers:
-            response = handler(record_api, request, response, request_headers)
+            response = self.call_handler(handler, record_api, request, response, request_headers)
         return response
 
     def execute_request_error_handler(self, record_api, request, error, request_headers):
         for handler in RecordEventHandler._global_request_error_handlers + self._request_error_handlers:
-            error = handler(record_api, request, error, request_headers)
+            error = self.call_handler(handler, record_api, request, error, request_headers)
         return error
+
+    def call_handler(self, handler, record_api, *args):
+        if hasattr(handler, '__self__') and handler.__self__ == record_api:
+            return handler(*args)
+        else:
+            return handler(record_api, *args)
 
     # decorate
     @staticmethod
