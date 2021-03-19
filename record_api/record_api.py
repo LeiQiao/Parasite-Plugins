@@ -361,7 +361,7 @@ class RecordAPI:
         if isinstance(record, tuple):
             model_record = None
             for rcd in record:
-                if rcd.__class__ == self._record_model:
+                if isinstance(rcd, self._record_model):
                     model_record = rcd
                     break
             if model_record is None:
