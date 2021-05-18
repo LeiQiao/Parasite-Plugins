@@ -25,3 +25,15 @@ def none_to_0_formatter(v):
         return 0
     else:
         return v
+
+def mask_mobile_formatter(v):
+    if len(v) == 11:
+        return v[:3] + '****' + v[-4:]
+    elif len(v) > 2:
+        v = v[0]
+        for i in range(len(v)-2):
+            v += '*'
+        v += v[-1]
+        return v
+    else:
+        return '*'
