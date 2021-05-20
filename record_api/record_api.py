@@ -80,6 +80,8 @@ class RecordAPI:
             if not isinstance(constrain_filter, RecordFilter):
                 raise TypeError('record filter is not type RecordFilter: {0}'
                                 .format(constrain_filter.__class__.__name__))
+                
+            self._change_field_attribute_to_string(constrain_filter)
             self._constrains.append(constrain_filter)
 
     def constrains(self):
