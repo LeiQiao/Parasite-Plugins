@@ -701,7 +701,7 @@ class RecordDeleteAPI(RecordAPI):
         super(RecordDeleteAPI, self).__init__(model, route, method, json_data_form)
 
     def regist(self):
-        if len(self._inputs) == 0:
+        if len(self._inputs) == 0 and len(self._constrains) == 0:
             raise PermissionError('unable remove all record of \'{0}\''.format(self._record_model.__name__))
         for record_field in self._inputs:
             if not isinstance(record_field, RecordFilter):
