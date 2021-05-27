@@ -85,6 +85,62 @@ class RecordEventHandler:
     def add_request_error_handler(self, handler):
         self._request_error_handlers.append(handler)
 
+    # remove op handler
+    def remove_before_query_handler(self, handler):
+        self._before_query_handlers.remove(handler)
+
+    def remove_after_query_handler(self, handler):
+        self._after_query_handlers.remove(handler)
+
+    def remove_before_commit_handler(self, handler):
+        self._before_commit_handlers.remove(handler)
+
+    def remove_after_commit_handler(self, handler):
+        self._after_commit_handlers.remove(handler)
+
+    def remove_before_delete_handler(self, handler):
+        self._before_delete_handlers.remove(handler)
+
+    def remove_after_delete_handler(self, handler):
+        self._after_delete_handlers.remove(handler)
+
+    def remove_before_request_handler(self, handler):
+        self._before_request_handlers.remove(handler)
+
+    def remove_after_request_handler(self, handler):
+        self._after_request_handlers.remove(handler)
+
+    def remove_request_error_handler(self, handler):
+        self._request_error_handlers.remove(handler)
+
+    # clear op handler
+    def clear_before_query_handler(self):
+        self._before_query_handlers.clear()
+
+    def clear_after_query_handler(self):
+        self._after_query_handlers.clear()
+
+    def clear_before_commit_handler(self):
+        self._before_commit_handlers.clear()
+
+    def clear_after_commit_handler(self):
+        self._after_commit_handlers.clear()
+
+    def clear_before_delete_handler(self):
+        self._before_delete_handlers.clear()
+
+    def clear_after_delete_handler(self):
+        self._after_delete_handlers.clear()
+
+    def clear_before_request_handler(self):
+        self._before_request_handlers.clear()
+
+    def clear_after_request_handler(self):
+        self._after_request_handlers.clear()
+
+    def clear_request_error_handler(self):
+        self._request_error_handlers.clear()
+
     # execute op handler
     def execute_before_query_handler(self, record_api, query):
         for handler in RecordEventHandler._global_before_query_handlers + self._before_query_handlers:
