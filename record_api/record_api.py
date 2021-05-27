@@ -319,6 +319,34 @@ class RecordAPI:
     def remove_request_error(self, func):
         self._event_handler.remove_request_error_handler(func)
 
+    # clear handlers
+    def clear_before_query(self):
+        self._event_handler.clear_before_query_handler()
+
+    def clear_after_query(self):
+        self._event_handler.clear_after_query_handler()
+
+    def clear_before_commit(self):
+        self._event_handler.clear_before_commit_handler()
+
+    def clear_after_commit(self):
+        self._event_handler.clear_after_commit_handler()
+
+    def clear_before_delete(self):
+        self._event_handler.clear_before_delete_handler()
+
+    def clear_after_delete(self):
+        self._event_handler.clear_after_delete_handler()
+
+    def clear_before_request(self):
+        self._event_handler.clear_before_request_handler()
+
+    def clear_after_request(self):
+        self._event_handler.clear_after_request_handler()
+
+    def clear_request_error(self):
+        self._event_handler.clear_request_error_handler()
+
     # decorate
     @staticmethod
     def get_record_api(route, method):
