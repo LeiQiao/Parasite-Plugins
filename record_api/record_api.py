@@ -80,7 +80,7 @@ class RecordAPI:
             if not isinstance(constrain_filter, RecordFilter):
                 raise TypeError('record filter is not type RecordFilter: {0}'
                                 .format(constrain_filter.__class__.__name__))
-                
+
             self._change_field_attribute_to_string(constrain_filter)
             self._constrains.append(constrain_filter)
 
@@ -263,6 +263,7 @@ class RecordAPI:
     def handle(self):
         pass
 
+    # add handlers
     def add_before_query(self, func):
         self._event_handler.add_before_query_handler(func)
 
@@ -289,6 +290,34 @@ class RecordAPI:
 
     def add_request_error(self, func):
         self._event_handler.add_request_error_handler(func)
+
+    # remove handlers
+    def remove_before_query(self, func):
+        self._event_handler.remove_before_query_handler(func)
+
+    def remove_after_query(self, func):
+        self._event_handler.remove_after_query_handler(func)
+
+    def remove_before_commit(self, func):
+        self._event_handler.remove_before_commit_handler(func)
+
+    def remove_after_commit(self, func):
+        self._event_handler.remove_after_commit_handler(func)
+
+    def remove_before_delete(self, func):
+        self._event_handler.remove_before_delete_handler(func)
+
+    def remove_after_delete(self, func):
+        self._event_handler.remove_after_delete_handler(func)
+
+    def remove_before_request(self, func):
+        self._event_handler.remove_before_request_handler(func)
+
+    def remove_after_request(self, func):
+        self._event_handler.remove_after_request_handler(func)
+
+    def remove_request_error(self, func):
+        self._event_handler.remove_request_error_handler(func)
 
     # decorate
     @staticmethod
