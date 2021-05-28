@@ -1,4 +1,3 @@
-
 class EditableResult(tuple):
     def __init__(self, result):
         super(EditableResult, self).__init__()
