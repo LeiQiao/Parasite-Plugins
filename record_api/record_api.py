@@ -725,7 +725,7 @@ class RecordEditAPI(RecordAPI):
         for record in records:
             RecordFieldEditor.endflush(record)
 
-        records = self._event_handler.execute_after_commit_handler(self, records)
+        self._event_handler.execute_after_commit_handler(self, records)
 
         records_json = []
         for record in records:
