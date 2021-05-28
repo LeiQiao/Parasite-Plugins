@@ -16,3 +16,9 @@ class EditableResult(tuple):
         value = self._keys[self.startIndex]
         self.startIndex += 1
         return value
+    
+    def set(self, key, value):
+        if key not in self._keys:
+            self._keys.append(key)
+            
+        setattr(self, key, value)
