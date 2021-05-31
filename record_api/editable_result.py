@@ -18,7 +18,7 @@ class EditableResult(tuple):
             raise StopIteration
         value = self._keys[self.startIndex]
         self.startIndex += 1
-        return value
+        return getattr(self, value)
 
     def set(self, key, value):
         if key not in self._keys:
