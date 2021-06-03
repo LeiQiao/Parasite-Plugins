@@ -81,6 +81,9 @@ class OSSClient:
         return True
 
     def get_public_download_url(self, file_name):
+        if file_name is None or len(file_name) == 0:
+            return ''
+        
         file_url = ''
         if self.download_domain is not None and len(self.download_domain) > 0:
             file_url = self.download_domain
