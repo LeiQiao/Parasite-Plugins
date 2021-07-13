@@ -3,9 +3,9 @@ from pa.plugin import Plugin
 import getopt
 import sys
 import os
-from fishbase.fish_common import conf_as_dict
-from fishbase.fish_file import check_sub_path_create
-from fishbase.fish_logger import logger as fishbase_logger, set_log_file
+from .fishbase import conf_as_dict
+from .fishbase import check_sub_path_create
+from .fishbase import logger as fishbase_logger, set_log_file
 from .plugin_manager import PluginManager
 from .server_config import ServerConfig
 import traceback
