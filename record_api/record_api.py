@@ -225,8 +225,8 @@ class RecordAPI:
                 str(e)
                 pa.log.info('duplicated request {0} get same response from last request'
                             '(response unable serialized)'.format(
-                    self._route
-                ))
+                                self._route
+                            ))
 
         if response_error is not None:
             raise response_error
@@ -247,6 +247,8 @@ class RecordAPI:
         self._request = request
         self._request_headers = request_headers
 
+        request_start_time = time.time()
+
         self._event_handler.execute_before_request_handler(self, self._request, self._request_headers)
         try:
             self.handle()
@@ -256,6 +258,11 @@ class RecordAPI:
                                                                            self._request,
                                                                            self._response,
                                                                            self._request_headers)
+
+        pa.log.info('route [{0}] request spend time [{1:.3}]'.format(
+            self._route,
+            time.time() - request_start_time
+        ))
 
         return self._response
 
@@ -512,12 +519,18 @@ class RecordListAPI(RecordAPI):
                     raise parameter_error(i18n(PAGINATION_START_ERROR).format(self.page_number.parameter_name))
                 query = query.offset((page_number-1)*page_size)
 
+        query_start_time = time.time()
         try:
             all_records = query.all()
             total_count = record_count_query.count()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch all records {0}'.format(e))
             raise fetch_database_error()
+
+        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+            self._route,
+            time.time() - query_start_time
+        ))
 
         all_records = self._event_handler.execute_after_query_handler(self, all_records)
 
@@ -550,7 +563,6 @@ class RecordListAPI(RecordAPI):
         return decorated
 
 
-
 class RecordGetAPI(RecordAPI):
     def __init__(self, model, route, method=None, json_data_form=False):
         if method is None:
@@ -572,11 +584,17 @@ class RecordGetAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
+        query_start_time = time.time()
         try:
             record = query.first()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch record {0}'.format(e))
             raise fetch_database_error()
+
+        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+            self._route,
+            time.time() - query_start_time
+        ))
 
         records = []
         if record is not None:
@@ -601,7 +619,6 @@ class RecordGetAPI(RecordAPI):
             else:
                 record_json[field.parameter_name] = field.record_value(model_record)
 
-
         self._response = record_json
 
     # decorate
@@ -613,7 +630,6 @@ class RecordGetAPI(RecordAPI):
             api.regist()
 
         return decorated
-
 
 
 class RecordAddAPI(RecordAPI):
@@ -671,7 +687,6 @@ class RecordAddAPI(RecordAPI):
         return decorated
 
 
-
 class RecordEditAPI(RecordAPI):
     def __init__(self, model, route, method=None, json_data_form=False):
         if method is None:
@@ -691,11 +706,17 @@ class RecordEditAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
+        query_start_time = time.time()
         try:
             records = query.all()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
+
+        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+            self._route,
+            time.time() - query_start_time
+        ))
 
         records = self._event_handler.execute_after_query_handler(self, records)
 
@@ -750,7 +771,6 @@ class RecordEditAPI(RecordAPI):
         return decorated
 
 
-
 class RecordDeleteAPI(RecordAPI):
     def __init__(self, model, route, method=None, json_data_form=False):
         if method is None:
@@ -779,11 +799,17 @@ class RecordDeleteAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
+        query_start_time = time.time()
         try:
             records = query.all()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
+
+        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+            self._route,
+            time.time() - query_start_time
+        ))
 
         records = self._event_handler.execute_after_query_handler(self, records)
 
