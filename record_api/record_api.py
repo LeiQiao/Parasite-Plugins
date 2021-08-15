@@ -259,7 +259,8 @@ class RecordAPI:
                                                                            self._response,
                                                                            self._request_headers)
 
-        pa.log.info('route [{0}] request spend time [{1:.3}]'.format(
+        pa.log.info('route [{0} {1}] request spend time [{2:.3}]'.format(
+            self._method,
             self._route,
             time.time() - request_start_time
         ))
@@ -527,7 +528,8 @@ class RecordListAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch all records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
+            self._method,
             self._route,
             time.time() - query_start_time
         ))
@@ -591,7 +593,8 @@ class RecordGetAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch record {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
+            self._method,
             self._route,
             time.time() - query_start_time
         ))
@@ -713,7 +716,8 @@ class RecordEditAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
+            self._method,
             self._route,
             time.time() - query_start_time
         ))
@@ -806,7 +810,8 @@ class RecordDeleteAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0}] query spend time [{1:.3}]'.format(
+        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
+            self._method,
             self._route,
             time.time() - query_start_time
         ))
