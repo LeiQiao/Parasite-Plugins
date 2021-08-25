@@ -9,6 +9,35 @@ from redis_client import RedisClient
 import time
 import json
 import re
+import random
+
+
+class TimeProfile:
+    def __init__(self, record_api=None, name=None):
+        if record_api is not None:
+            self.name = '[time profile] route [{0} {1}]'.format(record_api.get_method(), record_api.get_route())
+        elif name is not None:
+            self.name = '[time profile] {0}'.format(name)
+        else:
+            self.name = '[time profile] unnamed-{0}'.format(random.randint(0, 100))
+        self.start_time = self.init_time = time.time()
+
+    def reset(self):
+        self.start_time = time.time()
+
+    def debug(self, name, threshold=999):
+        self._debug(self.start_time, name, threshold)
+        self.start_time = time.time()
+
+    def debug_init(self, name, threshold=999):
+        self._debug(self.init_time, name, threshold)
+
+    def _debug(self, start_time, name, threshold):
+        spend_time = time.time() - start_time
+        pa.log.info('{0} {1} {2:.3}'.format(self.name, name, spend_time))
+
+        if spend_time >= threshold > 0:
+            pa.log.warning('[warning] {0} {1} spend time more then {2} sec.'.format(self.name, name, threshold))
 
 
 class RecordAPI:
@@ -247,7 +276,7 @@ class RecordAPI:
         self._request = request
         self._request_headers = request_headers
 
-        request_start_time = time.time()
+        tp = TimeProfile(self)
 
         self._event_handler.execute_before_request_handler(self, self._request, self._request_headers)
         try:
@@ -259,11 +288,7 @@ class RecordAPI:
                                                                            self._response,
                                                                            self._request_headers)
 
-        pa.log.info('route [{0} {1}] request spend time [{2:.3}]'.format(
-            self._method,
-            self._route,
-            time.time() - request_start_time
-        ))
+        tp.debug('request spend time', threshold=1)
 
         return self._response
 
@@ -520,19 +545,19 @@ class RecordListAPI(RecordAPI):
                     raise parameter_error(i18n(PAGINATION_START_ERROR).format(self.page_number.parameter_name))
                 query = query.offset((page_number-1)*page_size)
 
-        query_start_time = time.time()
+        tp = TimeProfile(self)
+
         try:
             all_records = query.all()
-            total_count = record_count_query.count()
+            if self.total_count is not None:
+                total_count = record_count_query.count()
+            else:
+                total_count = 0
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch all records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
-            self._method,
-            self._route,
-            time.time() - query_start_time
-        ))
+        tp.debug('query spend time', threshold=1)
 
         all_records = self._event_handler.execute_after_query_handler(self, all_records)
 
@@ -586,18 +611,15 @@ class RecordGetAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
-        query_start_time = time.time()
+        tp = TimeProfile(self)
+
         try:
             record = query.first()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch record {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
-            self._method,
-            self._route,
-            time.time() - query_start_time
-        ))
+        tp.debug('query spend time', threshold=1)
 
         records = []
         if record is not None:
@@ -709,18 +731,15 @@ class RecordEditAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
-        query_start_time = time.time()
+        tp = TimeProfile(self)
+
         try:
             records = query.all()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
-            self._method,
-            self._route,
-            time.time() - query_start_time
-        ))
+        tp.debug('query spend time', threshold=1)
 
         records = self._event_handler.execute_after_query_handler(self, records)
 
@@ -803,18 +822,15 @@ class RecordDeleteAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
-        query_start_time = time.time()
+        tp = TimeProfile(self)
+
         try:
             records = query.all()
         except Exception as e:
             pa.log.error('RecordAPIPlugin: unable fetch records {0}'.format(e))
             raise fetch_database_error()
 
-        pa.log.info('route [{0} {1}] query spend time [{2:.3}]'.format(
-            self._method,
-            self._route,
-            time.time() - query_start_time
-        ))
+        tp.debug('query spend time', threshold=1)
 
         records = self._event_handler.execute_after_query_handler(self, records)
 
