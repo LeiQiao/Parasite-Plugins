@@ -10,6 +10,7 @@ import time
 import json
 import re
 import random
+import copy
 
 
 class TimeProfile:
@@ -58,6 +59,21 @@ class RecordAPI:
         self._event_handler = RecordEventHandler()
 
         self._unique_inputs = []
+
+    def _copy(self):
+        new_copy = copy.copy(self)
+
+        new_copy._record_model = self._record_model
+        new_copy._route = self._route
+        new_copy._method = self._method
+        new_copy._json_data_form = self._json_data_form
+        new_copy._inputs = self._inputs
+        new_copy._outputs = self._outputs
+        new_copy._constrains = self._constrains
+        new_copy._event_handler = self._event_handler
+        new_copy._unique_inputs = self._unique_inputs
+        new_copy.handle = self.handle
+        return new_copy
 
     def get_route(self):
         return self._route
@@ -234,7 +250,8 @@ class RecordAPI:
         response_error = None
         if response is None:
             try:
-                response = self.handle_request(request, request_headers)
+                single_request = self._copy()
+                response = single_request.handle_request(request, request_headers)
             except Exception as e:
                 response_error = e
             try:
