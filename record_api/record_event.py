@@ -188,6 +188,8 @@ class RecordEventHandler:
     def call_handler(handler, record_api, *args):
         if hasattr(handler, '__self__') and handler.__self__ == record_api:
             return handler(*args)
+        elif hasattr(handler, '__self__') and isinstance(handler.__self__, record_api.__class__):
+            return handler.__func__(record_api, *args)
         else:
             return handler(record_api, *args)
 

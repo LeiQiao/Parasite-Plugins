@@ -2,6 +2,7 @@ class EditableResult(tuple):
     def __init__(self, result):
         super(EditableResult, self).__init__()
         self._keys = list(result.keys())
+        self._values = {}
         for key in self._keys:
             if isinstance(result, dict):
                 setattr(self, key, result[key])
@@ -25,3 +26,6 @@ class EditableResult(tuple):
             self._keys.append(key)
 
         setattr(self, key, value)
+
+    def __getattr__(self, item):
+        return object.__getattribute__(self, item)
