@@ -35,7 +35,7 @@ class TimeProfile:
 
     def _debug(self, start_time, name, threshold):
         spend_time = time.time() - start_time
-        pa.log.info('{0} {1} {2:.3}'.format(self.name, name, spend_time))
+        pa.log.info('{0} {1} {2:.3f}'.format(self.name, name, spend_time))
 
         if spend_time >= threshold > 0:
             pa.log.warning('[warning] {0} {1} spend time more then {2} sec.'.format(self.name, name, threshold))

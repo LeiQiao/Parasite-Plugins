@@ -2,7 +2,6 @@ class EditableResult(tuple):
     def __init__(self, result):
         super(EditableResult, self).__init__()
         self._keys = list(result.keys())
-        self._values = {}
         for key in self._keys:
             if isinstance(result, dict):
                 setattr(self, key, result[key])
@@ -29,3 +28,8 @@ class EditableResult(tuple):
 
     def __getattr__(self, item):
         return object.__getattribute__(self, item)
+
+    def __setattr__(self, key, value):
+        if key != '_keys' and key != 'startIndex' and key not in self._keys:
+            self._keys.append(key)
+        object.__setattr__(self, key, value)
