@@ -27,8 +27,9 @@ class TimeProfile:
         self.start_time = time.time()
 
     def debug(self, name, threshold=999):
-        self._debug(self.start_time, name, threshold)
+        spend_time = self._debug(self.start_time, name, threshold)
         self.start_time = time.time()
+        return spend_time
 
     def debug_init(self, name, threshold=999):
         self._debug(self.init_time, name, threshold)
@@ -39,6 +40,8 @@ class TimeProfile:
 
         if spend_time >= threshold > 0:
             pa.log.warning('[warning] {0} {1} spend time more then {2} sec.'.format(self.name, name, threshold))
+
+        return spend_time
 
 
 class RecordAPI:
@@ -573,7 +576,8 @@ class RecordListAPI(RecordAPI):
             pa.log.error('RecordAPIPlugin: unable fetch all records {0}'.format(e))
             raise fetch_database_error()
 
-        tp.debug('query spend time', threshold=1)
+        if tp.debug('query spend time', threshold=1) > 1:
+            pa.log.warning('query [${0}] spend time long time.'.format(str(query)))
 
         all_records = self._event_handler.execute_after_query_handler(self, all_records)
 
