@@ -292,8 +292,15 @@ class RecordAPI:
         return custom_success(response)
 
     def handle_request(self, request, request_headers):
-        self._request = dict(request)
-        self._request_headers = dict(request_headers)
+        if request is None:
+            self._request = {}
+        else:
+            self._request = dict(request)
+
+        if request_headers is None:
+            self._request_headers = {}
+        else:
+            self._request_headers = dict(request_headers)
 
         tp = TimeProfile(self)
 
