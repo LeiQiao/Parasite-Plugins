@@ -537,6 +537,10 @@ class RecordListAPI(RecordAPI):
         self.page_size = page_size
         self.total_count = total_count
 
+    # noinspection PyMethodMayBeStatic
+    def record_count_query(self, query):
+        return query
+
     def handle(self):
         query = self.make_query()
 
@@ -552,7 +556,7 @@ class RecordListAPI(RecordAPI):
 
         query = self._event_handler.execute_before_query_handler(self, query)
 
-        record_count_query = query
+        record_count_query = self.record_count_query(query)
         if self.page_size is not None and self.page_size.has_value(self._request):
             try:
                 page_size = int(self.page_size.request_value(self._request))
